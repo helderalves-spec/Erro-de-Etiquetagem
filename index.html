@@ -3,34 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPX V10 - Histórico Simplificado</title>
+    <title>SPX V10 - ONLINE CLOUD</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         body { display: flex; height: 100vh; background-color: #f0f2f5; overflow: hidden; }
-        
         .sidebar { width: 230px; background-color: #1e272e; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
         .sidebar h2 { padding: 20px; text-align: center; background-color: #ee4d2d; color: white; font-size: 16px; }
         .menu-btn { padding: 12px 20px; border: none; background: none; color: #d2dae2; text-align: left; cursor: pointer; font-size: 13px; border-left: 4px solid transparent; transition: 0.3s; }
         .menu-btn.active { background-color: #2f3542; border-left: 4px solid #ee4d2d; color: white; font-weight: bold; }
-
         .content { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
         .page { display: none; width: 100%; max-width: 800px; }
         .page.active { display: block; }
-
         .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
         h1 { margin-bottom: 15px; color: #2d3436; font-size: 18px; border-left: 5px solid #ee4d2d; padding-left: 10px; }
-        
         .hist-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .hist-table th { background: #2d3436; color: white; padding: 10px; border: 1px solid #444; text-transform: uppercase; font-size: 11px; }
+        .hist-table th { background: #2d3436; color: white; padding: 10px; border: 1px solid #444; font-size: 11px; }
         .hist-table td { padding: 8px; border: 1px solid #dfe6e9; text-align: center; }
-        .hist-table tr:nth-child(even) { background-color: #f8f9fa; }
-        
         .date-header { background: #ee4d2d !important; color: white !important; text-align: left !important; font-size: 14px !important; padding: 10px !important; }
         .badge-error { color: #d63031; font-weight: 800; font-size: 14px; }
-        .op-name { text-align: left !important; font-weight: 600; color: #2d3436; }
-
         .scan-input { width: 100%; padding: 15px; font-size: 22px; text-align: center; border: 2px solid #ee4d2d; border-radius: 8px; outline: none; }
         .btn-danger { background: #d63031; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 11px; margin-top: auto; }
+        #cloud-status { font-size: 10px; text-align: center; padding: 5px; color: #888; }
     </style>
 </head>
 <body>
@@ -41,7 +34,7 @@
         <button class="menu-btn" onclick="showPage('bipar', this)">🔦 2. Auditoria Erros</button>
         <button class="menu-btn" onclick="showPage('audit', this)">📑 3. Performance</button>
         <button class="menu-btn" onclick="showPage('diario', this)">📅 4. Histórico Diário</button>
-        
+        <div id="cloud-status">☁️ Conectando ao Cloud...</div>
         <div style="padding: 20px; margin-top: auto;">
             <button class="btn-danger" onclick="limparTudo()">⚠️ LIMPAR TUDO</button>
         </div>
@@ -52,7 +45,7 @@
             <h1>Importar Base</h1>
             <div class="card">
                 <input type="file" id="csv-file" accept=".csv" onchange="lerArquivo(event)">
-                <div id="status-msg" style="margin-top: 15px; font-weight: bold;"></div>
+                <div id="status-msg" style="margin-top: 15px;"></div>
             </div>
         </div>
 
@@ -63,9 +56,7 @@
             </div>
             <div class="card" style="padding:0; max-height: 300px; overflow-y: auto;">
                 <table class="hist-table" id="tabela-recente">
-                    <thead style="position: sticky; top:0;">
-                        <tr><th>Hora</th><th>Código</th><th>Operador</th></tr>
-                    </thead>
+                    <thead><tr><th>Hora</th><th>Código</th><th>Operador</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -75,9 +66,7 @@
             <h1>Performance Acumulada</h1>
             <div class="card" style="padding:0">
                 <table class="hist-table" id="tabela-perf">
-                    <thead>
-                        <tr><th>Operador</th><th>Total Itens</th><th>Total Erros</th><th>Acuracidade</th></tr>
-                    </thead>
+                    <thead><tr><th>Operador</th><th>Total Itens</th><th>Total Erros</th><th>%</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -85,34 +74,106 @@
 
         <div id="diario" class="page">
             <h1>Relatório de Erros por Dia</h1>
-            <div id="container-historico">
-                </div>
+            <div id="container-historico"></div>
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD4-kttLAn-QvxF7LIX-BMtTfCcz5HLnuk",
+            authDomain: "erro-de-etiquetagem.firebaseapp.com",
+            projectId: "erro-de-etiquetagem",
+            storageBucket: "erro-de-etiquetagem.firebasestorage.app",
+            messagingSenderId: "924044206334",
+            appId: "1:924044206334:web:b1faf5bc9c94eb04c305af",
+            measurementId: "G-3H9WW9SWCJ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const colErros = collection(db, "erros_bipados");
+
+        // Variáveis Locais
         let baseDeDados = new Map(JSON.parse(localStorage.getItem('spx_base')) || []);
-        let errosRegistrados = JSON.parse(localStorage.getItem('spx_erros')) || [];
         let resumoOperadores = JSON.parse(localStorage.getItem('spx_resumo')) || {};
+        let errosRegistrados = [];
 
-        function salvar() {
-            localStorage.setItem('spx_erros', JSON.stringify(errosRegistrados));
-            localStorage.setItem('spx_resumo', JSON.stringify(resumoOperadores));
-            localStorage.setItem('spx_base', JSON.stringify(Array.from(baseDeDados.entries())));
+        // 1. OUVIR MUDANÇAS NO CLOUD (Tempo Real)
+        onSnapshot(query(colErros, orderBy("timestamp", "desc")), (snapshot) => {
+            errosRegistrados = [];
+            snapshot.forEach((doc) => errosRegistrados.push(doc.data()));
+            
+            // Atualiza o resumo de erros na memória local baseada no Cloud
+            Object.keys(resumoOperadores).forEach(op => resumoOperadores[op].erros = 0);
+            errosRegistrados.forEach(e => {
+                if(resumoOperadores[e.op]) resumoOperadores[e.op].erros++;
+            });
+
+            document.getElementById('cloud-status').innerHTML = "☁️ Online - Sincronizado";
+            renderizarBipsRecentes();
+        });
+
+        // 2. BIPAR E SALVAR NO CLOUD
+        window.processarBip = async function(e) {
+            if (e.key === "Enter") {
+                const code = e.target.value.trim();
+                if (!code) return;
+                const op = baseDeDados.get(code) || "Não Encontrado";
+                const data = new Date().toLocaleDateString('pt-BR');
+                const hora = new Date().toLocaleTimeString();
+
+                try {
+                    await addDoc(colErros, {
+                        op, code, data, hora,
+                        timestamp: Date.now()
+                    });
+                } catch (err) {
+                    console.error("Erro ao salvar no Cloud:", err);
+                }
+                e.target.value = "";
+            }
         }
 
-        function showPage(id, btn) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            btn.classList.add('active');
-
-            if(id === 'audit') renderizarPerformance();
-            if(id === 'diario') renderizarHistoricoDiario();
-            if(id === 'bipar') setTimeout(() => document.getElementById('scanner').focus(), 100);
+        // 3. FUNÇÕES DE RENDERIZAÇÃO
+        window.renderizarBipsRecentes = function() {
+            const tbody = document.querySelector('#tabela-recente tbody');
+            tbody.innerHTML = errosRegistrados.slice(0, 50).map(e => 
+                `<tr><td>${e.hora}</td><td>${e.code}</td><td>${e.op}</td></tr>`
+            ).join('');
         }
 
-        function lerArquivo(event) {
+        window.renderizarPerformance = function() {
+            const tbody = document.querySelector('#tabela-perf tbody');
+            tbody.innerHTML = Object.entries(resumoOperadores).sort((a,b) => b[1].total - a[1].total).map(([nome, d]) => {
+                const ac = d.total > 0 ? (((d.total - d.erros) / d.total) * 100).toFixed(1) : "0";
+                return `<tr><td style="text-align:left;">${nome}</td><td>${d.total}</td><td class="badge-error">${d.erros}</td><td>${ac}%</td></tr>`;
+            }).join('');
+        }
+
+        window.renderizarHistoricoDiario = function() {
+            const container = document.getElementById('container-historico');
+            container.innerHTML = "";
+            const histPorData = {};
+            errosRegistrados.forEach(e => {
+                if (!histPorData[e.data]) histPorData[e.data] = {};
+                histPorData[e.data][e.op] = (histPorData[e.data][e.op] || 0) + 1;
+            });
+            Object.keys(histPorData).sort().reverse().forEach(data => {
+                const ops = histPorData[data];
+                container.innerHTML += `
+                    <div class="card" style="padding:0">
+                        <table class="hist-table">
+                            <thead><tr><th colspan="2" class="date-header">📅 DATA: ${data}</th></tr></thead>
+                            <tbody>${Object.entries(ops).map(([nome, qtd]) => `<tr><td style="text-align:left;">${nome}</td><td class="badge-error">${qtd}</td></tr>`).join('')}</tbody>
+                        </table>
+                    </div>`;
+            });
+        }
+
+        window.lerArquivo = function(event) {
             const file = event.target.files[0];
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -133,79 +194,27 @@
                         resumoOperadores[op].total++;
                     }
                 }
-                salvar();
-                document.getElementById('status-msg').innerHTML = `<span style="color:green">✔ Base carregada com sucesso!</span>`;
+                localStorage.setItem('spx_base', JSON.stringify(Array.from(baseDeDados.entries())));
+                localStorage.setItem('spx_resumo', JSON.stringify(resumoOperadores));
+                document.getElementById('status-msg').innerHTML = "✔ Base Local Atualizada!";
             };
             reader.readAsText(file);
         }
 
-        function processarBip(e) {
-            if (e.key === "Enter") {
-                const code = e.target.value.trim();
-                if (!code) return;
-                const op = baseDeDados.get(code) || "Não Encontrado";
-                const data = new Date().toLocaleDateString('pt-BR');
-                const hora = new Date().toLocaleTimeString();
-
-                errosRegistrados.push({ op, code, data, hora });
-                if (resumoOperadores[op]) resumoOperadores[op].erros++;
-
-                salvar();
-                const tbody = document.querySelector('#tabela-recente tbody');
-                tbody.innerHTML = `<tr><td>${hora}</td><td>${code}</td><td>${op}</td></tr>` + tbody.innerHTML;
-                e.target.value = "";
-            }
+        window.showPage = function(id, btn) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+            if(id === 'audit') renderizarPerformance();
+            if(id === 'diario') renderizarHistoricoDiario();
+            if(id === 'bipar') setTimeout(() => document.getElementById('scanner').focus(), 100);
         }
 
-        function renderizarPerformance() {
-            const tbody = document.querySelector('#tabela-perf tbody');
-            tbody.innerHTML = Object.entries(resumoOperadores).sort((a,b) => b[1].total - a[1].total).map(([nome, d]) => {
-                const ac = d.total > 0 ? (((d.total - d.erros) / d.total) * 100).toFixed(1) : "0";
-                return `<tr><td class="op-name">${nome}</td><td>${d.total}</td><td class="badge-error">${d.erros}</td><td>${ac}%</td></tr>`;
-            }).join('');
-        }
-
-        function renderizarHistoricoDiario() {
-            const container = document.getElementById('container-historico');
-            container.innerHTML = "";
-
-            // Agrupa por DATA e depois por OPERADOR
-            const historicoPorData = {};
-            errosRegistrados.forEach(e => {
-                if (!historicoPorData[e.data]) historicoPorData[e.data] = {};
-                if (!historicoPorData[e.data][e.op]) historicoPorData[e.data][e.op] = 0;
-                historicoPorData[e.data][e.op]++;
-            });
-
-            Object.keys(historicoPorData).reverse().forEach(data => {
-                const operadoresNoDia = historicoPorData[data];
-                let totalErrosDia = Object.values(operadoresNoDia).reduce((a, b) => a + b, 0);
-
-                let html = `
-                    <div class="card" style="padding:0">
-                        <table class="hist-table">
-                            <thead>
-                                <tr><th colspan="2" class="date-header">📅 DATA: ${data} <span style="float:right">Total Erros: ${totalErrosDia}</span></th></tr>
-                                <tr><th>Operador</th><th style="width:150px">Quantidade de Erros</th></tr>
-                            </thead>
-                            <tbody>
-                                ${Object.entries(operadoresNoDia).sort((a,b) => b[1] - a[1]).map(([nome, qtd]) => `
-                                    <tr>
-                                        <td class="op-name">${nome}</td>
-                                        <td class="badge-error">${qtd}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>`;
-                container.innerHTML += html;
-            });
-
-            if (errosRegistrados.length === 0) container.innerHTML = "<p style='text-align:center'>Nenhum erro registrado.</p>";
-        }
-
-        function limparTudo() {
-            if(confirm("Deseja apagar permanentemente o histórico e a base?")) {
+        window.limparTudo = async function() {
+            if(confirm("Isso apagará os dados NO CLOUD para todos os usuários. Confirmar?")) {
+                const q = await getDocs(colErros);
+                q.forEach(async (d) => await deleteDoc(d.ref));
                 localStorage.clear();
                 location.reload();
             }
