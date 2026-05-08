@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPX V10 - Histórico Simplificado</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { display: flex; height: 100vh; background-color: #f0f2f5; overflow: hidden; }
+        
+        .sidebar { width: 230px; background-color: #1e272e; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar h2 { padding: 20px; text-align: center; background-color: #ee4d2d; color: white; font-size: 16px; }
+        .menu-btn { padding: 12px 20px; border: none; background: none; color: #d2dae2; text-align: left; cursor: pointer; font-size: 13px; border-left: 4px solid transparent; transition: 0.3s; }
+        .menu-btn.active { background-color: #2f3542; border-left: 4px solid #ee4d2d; color: white; font-weight: bold; }
+
+        .content { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
+        .page { display: none; width: 100%; max-width: 800px; }
+        .page.active { display: block; }
+
+        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h1 { margin-bottom: 15px; color: #2d3436; font-size: 18px; border-left: 5px solid #ee4d2d; padding-left: 10px; }
+        
+        .hist-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .hist-table th { background: #2d3436; color: white; padding: 10px; border: 1px solid #444; text-transform: uppercase; font-size: 11px; }
+        .hist-table td { padding: 8px; border: 1px solid #dfe6e9; text-align: center; }
+        .hist-table tr:nth-child(even) { background-color: #f8f9fa; }
+        
+        .date-header { background: #ee4d2d !important; color: white !important; text-align: left !important; font-size: 14px !important; padding: 10px !important; }
+        .badge-error { color: #d63031; font-weight: 800; font-size: 14px; }
+        .op-name { text-align: left !important; font-weight: 600; color: #2d3436; }
+
+        .scan-input { width: 100%; padding: 15px; font-size: 22px; text-align: center; border: 2px solid #ee4d2d; border-radius: 8px; outline: none; }
+        .btn-danger { background: #d63031; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 11px; margin-top: auto; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>LOGISTIQUE V10</h2>
+        <button class="menu-btn active" onclick="showPage('receive', this)">📥 1. Importar Base</button>
+        <button class="menu-btn" onclick="showPage('bipar', this)">🔦 2. Auditoria Erros</button>
+        <button class="menu-btn" onclick="showPage('audit', this)">📑 3. Performance</button>
+        <button class="menu-btn" onclick="showPage('diario', this)">📅 4. Histórico Diário</button>
+        
+        <div style="padding: 20px; margin-top: auto;">
+            <button class="btn-danger" onclick="limparTudo()">⚠️ LIMPAR TUDO</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div id="receive" class="page active">
+            <h1>Importar Base</h1>
+            <div class="card">
+                <input type="file" id="csv-file" accept=".csv" onchange="lerArquivo(event)">
+                <div id="status-msg" style="margin-top: 15px; font-weight: bold;"></div>
+            </div>
+        </div>
+
+        <div id="bipar" class="page">
+            <h1>Bipar Erros</h1>
+            <div class="card">
+                <input type="text" id="scanner" class="scan-input" placeholder="Bipe aqui..." onkeypress="processarBip(event)">
+            </div>
+            <div class="card" style="padding:0; max-height: 300px; overflow-y: auto;">
+                <table class="hist-table" id="tabela-recente">
+                    <thead style="position: sticky; top:0;">
+                        <tr><th>Hora</th><th>Código</th><th>Operador</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="audit" class="page">
+            <h1>Performance Acumulada</h1>
+            <div class="card" style="padding:0">
+                <table class="hist-table" id="tabela-perf">
+                    <thead>
+                        <tr><th>Operador</th><th>Total Itens</th><th>Total Erros</th><th>Acuracidade</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="diario" class="page">
+            <h1>Relatório de Erros por Dia</h1>
+            <div id="container-historico">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        let baseDeDados = new Map(JSON.parse(localStorage.getItem('spx_base')) || []);
+        let errosRegistrados = JSON.parse(localStorage.getItem('spx_erros')) || [];
+        let resumoOperadores = JSON.parse(localStorage.getItem('spx_resumo')) || {};
+
+        function salvar() {
+            localStorage.setItem('spx_erros', JSON.stringify(errosRegistrados));
+            localStorage.setItem('spx_resumo', JSON.stringify(resumoOperadores));
+            localStorage.setItem('spx_base', JSON.stringify(Array.from(baseDeDados.entries())));
+        }
+
+        function showPage(id, btn) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+
+            if(id === 'audit') renderizarPerformance();
+            if(id === 'diario') renderizarHistoricoDiario();
+            if(id === 'bipar') setTimeout(() => document.getElementById('scanner').focus(), 100);
+        }
+
+        function lerArquivo(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const linhas = e.target.result.split(/\r?\n/);
+                const cabecalho = linhas[0].split(linhas[0].includes(';') ? ';' : ',');
+                const colTrack = cabecalho.findIndex(c => c.trim().includes('SPX Tracking Number'));
+                const colOp = cabecalho.findIndex(c => c.trim().toLowerCase().includes('operator'));
+
+                baseDeDados.clear();
+                resumoOperadores = {};
+                for (let i = 1; i < linhas.length; i++) {
+                    const col = linhas[i].split(linhas[i].includes(';') ? ';' : ',');
+                    if (col[colTrack]) {
+                        const track = col[colTrack].trim();
+                        const op = col[colOp] ? col[colOp].replace(/\[.*?\]/, '').trim() : "Desconhecido";
+                        baseDeDados.set(track, op);
+                        if (!resumoOperadores[op]) resumoOperadores[op] = { total: 0, erros: 0 };
+                        resumoOperadores[op].total++;
+                    }
+                }
+                salvar();
+                document.getElementById('status-msg').innerHTML = `<span style="color:green">✔ Base carregada com sucesso!</span>`;
+            };
+            reader.readAsText(file);
+        }
+
+        function processarBip(e) {
+            if (e.key === "Enter") {
+                const code = e.target.value.trim();
+                if (!code) return;
+                const op = baseDeDados.get(code) || "Não Encontrado";
+                const data = new Date().toLocaleDateString('pt-BR');
+                const hora = new Date().toLocaleTimeString();
+
+                errosRegistrados.push({ op, code, data, hora });
+                if (resumoOperadores[op]) resumoOperadores[op].erros++;
+
+                salvar();
+                const tbody = document.querySelector('#tabela-recente tbody');
+                tbody.innerHTML = `<tr><td>${hora}</td><td>${code}</td><td>${op}</td></tr>` + tbody.innerHTML;
+                e.target.value = "";
+            }
+        }
+
+        function renderizarPerformance() {
+            const tbody = document.querySelector('#tabela-perf tbody');
+            tbody.innerHTML = Object.entries(resumoOperadores).sort((a,b) => b[1].total - a[1].total).map(([nome, d]) => {
+                const ac = d.total > 0 ? (((d.total - d.erros) / d.total) * 100).toFixed(1) : "0";
+                return `<tr><td class="op-name">${nome}</td><td>${d.total}</td><td class="badge-error">${d.erros}</td><td>${ac}%</td></tr>`;
+            }).join('');
+        }
+
+        function renderizarHistoricoDiario() {
+            const container = document.getElementById('container-historico');
+            container.innerHTML = "";
+
+            // Agrupa por DATA e depois por OPERADOR
+            const historicoPorData = {};
+            errosRegistrados.forEach(e => {
+                if (!historicoPorData[e.data]) historicoPorData[e.data] = {};
+                if (!historicoPorData[e.data][e.op]) historicoPorData[e.data][e.op] = 0;
+                historicoPorData[e.data][e.op]++;
+            });
+
+            Object.keys(historicoPorData).reverse().forEach(data => {
+                const operadoresNoDia = historicoPorData[data];
+                let totalErrosDia = Object.values(operadoresNoDia).reduce((a, b) => a + b, 0);
+
+                let html = `
+                    <div class="card" style="padding:0">
+                        <table class="hist-table">
+                            <thead>
+                                <tr><th colspan="2" class="date-header">📅 DATA: ${data} <span style="float:right">Total Erros: ${totalErrosDia}</span></th></tr>
+                                <tr><th>Operador</th><th style="width:150px">Quantidade de Erros</th></tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(operadoresNoDia).sort((a,b) => b[1] - a[1]).map(([nome, qtd]) => `
+                                    <tr>
+                                        <td class="op-name">${nome}</td>
+                                        <td class="badge-error">${qtd}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+                container.innerHTML += html;
+            });
+
+            if (errosRegistrados.length === 0) container.innerHTML = "<p style='text-align:center'>Nenhum erro registrado.</p>";
+        }
+
+        function limparTudo() {
+            if(confirm("Deseja apagar permanentemente o histórico e a base?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
