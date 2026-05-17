@@ -26,15 +26,23 @@
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; width: 100%; }
         h1 { margin-bottom: 20px; color: #2d3436; font-size: 20px; border-left: 5px solid #ee4d2d; padding-left: 12px; }
         
+        /* Painel Superior de Ações */
+        .action-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .action-group { display: flex; gap: 8px; }
+
         /* Tabelas Dinâmicas */
-        .table-wrapper { padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #dfe6e9; border-radius: 6px; }
+        .table-wrapper { padding: 0; max-height: 430px; overflow-y: auto; border: 1px solid #dfe6e9; border-radius: 6px; }
         .hist-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
         .hist-table thead { position: sticky; top: 0; background: #2d3436; z-index: 2; }
         .hist-table th { color: white; padding: 12px 10px; font-size: 11px; text-transform: uppercase; font-weight: 600; }
-        .hist-table td { padding: 10px; border-bottom: 1px solid #dfe6e9; color: #2d3436; }
+        .hist-table td { padding: 10px; border-bottom: 1px solid #dfe6e9; color: #2d3436; vertical-align: middle; }
         .hist-table tbody tr:last-child td { border-bottom: none; }
         .hist-table tr:nth-child(even) { background-color: #f8f9fa; }
         
+        /* Linha de Totais Fixos */
+        .total-row { background-color: #dfe6e9 !important; font-weight: bold; position: sticky; bottom: 0; z-index: 2; box-shadow: 0 -2px 5px rgba(0,0,0,0.05); }
+        .total-row td { border-top: 2px solid #b2bec3; border-bottom: none !important; color: #2d3436 !important; }
+
         /* Status e Badges */
         .date-header { background: #ee4d2d !important; color: white !important; text-align: left !important; font-size: 14px !important; padding: 12px !important; font-weight: bold; }
         .badge-error { color: #d63031; font-weight: 800; font-size: 14px; }
@@ -45,8 +53,18 @@
         .scan-input { width: 100%; padding: 18px; font-size: 24px; text-align: center; border: 2px solid #ee4d2d; border-radius: 8px; outline: none; box-shadow: 0 4px 10px rgba(238, 77, 45, 0.1); transition: 0.2s; }
         .scan-input:focus { box-shadow: 0 4px 15px rgba(238, 77, 45, 0.25); }
         .file-input { font-size: 14px; padding: 10px 0; }
+        
+        /* Botões de Ação */
+        .btn-utility { background: #2f3542; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
+        .btn-utility:hover { background: #57606f; }
+        .btn-clear-local { background: #7f8c8d; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 10px; transition: 0.2s; }
+        .btn-clear-local:hover { background: #95a5a6; }
         .btn-danger { background: #d63031; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: calc(100% - 40px); font-size: 12px; font-weight: bold; margin: 0 20px 20px 20px; transition: 0.2s; text-align: center; }
         .btn-danger:hover { background: #b32424; }
+        
+        /* Botão de excluir item único */
+        .btn-delete-item { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 14px; padding: 2px 8px; transition: 0.2s; }
+        .btn-delete-item:hover { color: #c0392b; transform: scale(1.15); }
     </style>
 </head>
 <body>
@@ -54,9 +72,9 @@
     <div class="sidebar">
         <h2>LOGISTIQUE V10</h2>
         <button id="btn-receive" class="menu-btn active" onclick="showPage('receive', this)">📥 1. Importar Base</button>
-        <button id="btn-bipar" class="menu-btn" onclick="showPage('bipar', this)">🔦 2. Auditoria Erros</button>
-        <button id="btn-audit" class="menu-btn" onclick="showPage('audit', this)">📑 3. Performance</button>
-        <button id="btn-diario" class="menu-btn" onclick="showPage('diario', this)">📅 4. Histórico Diário</button>
+        <button id="btn-bipar" class="menu-btn" onclick="showPage('bipar', this)">🔦 2. Erro de Etiquetagem</button>
+        <button id="btn-audit" class="menu-btn" onclick="showPage('audit', this)">📑 3. Performance 🔒</button>
+        <button id="btn-diario" class="menu-btn" onclick="showPage('diario', this)">📅 4. Histórico Diário 🔒</button>
         
         <div id="cloud-status">🔄 Conectando ao Cloud...</div>
         <button class="btn-danger" onclick="limparTudo()">⚠️ LIMPAR TUDO</button>
@@ -66,20 +84,32 @@
         <div id="receive" class="page active">
             <h1>Importar Base Operacional</h1>
             <div class="card">
-                <input type="file" id="csv-file" class="file-input" accept=".csv" onchange="lerArquivo(event)">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <input type="file" id="csv-file" class="file-input" accept=".csv" onchange="lerArquivo(event)">
+                    <button class="btn-clear-local" onclick="resetarBaseLocal()">🔄 Resetar Base Local</button>
+                </div>
                 <div id="status-msg" style="margin-top: 15px; font-weight: 600;"></div>
             </div>
         </div>
 
         <div id="bipar" class="page">
-            <h1>Bipar Erros detectados</h1>
+            <div class="action-header">
+                <h1>Erro de Etiquetagem</h1>
+                <div class="action-group">
+                    <button class="btn-utility" style="padding: 8px 15px; background-color: #7f8c8d;" onclick="resetarPaginaBips()">🔄 Resetar Página</button>
+                </div>
+            </div>
             <div class="card">
                 <input type="text" id="scanner" class="scan-input" placeholder="Bipe o código de barras aqui..." onkeypress="processarBip(event)" autocomplete="off">
             </div>
             <div class="card table-wrapper">
                 <table class="hist-table" id="tabela-recente">
                     <thead>
-                        <tr><th style="width: 20%;">Hora</th><th style="width: 40%;">Código</th><th style="width: 40%;">Operador do Erro</th></tr>
+                        <tr>
+                            <th style="width: 25%;">Hora</th>
+                            <th style="width: 60%;">Código (BR)</th>
+                            <th style="width: 15%;">Ações</th>
+                        </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -87,26 +117,33 @@
         </div>
 
         <div id="audit" class="page">
-            <h1>Performance de Acuracidade</h1>
+            <div class="action-header">
+                <h1>Performance de Acuracidade (Restrito)</h1>
+                <div class="action-group">
+                    <button class="btn-utility" style="padding: 8px 15px;" onclick="copiarPerformanceGeral()">📋 Copiar Tabela</button>
+                    <button class="btn-utility" style="padding: 8px 15px;" onclick="exportarPerformanceCSV()">📥 Exportar CSV</button>
+                </div>
+            </div>
             <div class="card table-wrapper" style="max-height: 550px;">
                 <table class="hist-table" id="tabela-perf">
                     <thead>
                         <tr><th style="text-align: left; padding-left: 20px;">Operador</th><th>Total Validado</th><th>Total Erros</th><th>Acuracidade %</th></tr>
                     </thead>
                     <tbody></tbody>
+                    <tfoot></tfoot>
                 </table>
             </div>
         </div>
 
         <div id="diario" class="page">
-            <h1>Relatório Quantitativo Diário</h1>
+            <h1>Relatório Quantitativo Diário (Restrito)</h1>
             <div id="container-historico"></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD4-kttLAn-QvxF7LIX-BMtTfCcz5HLnuk",
@@ -122,40 +159,57 @@
         const db = getFirestore(app);
         const colErros = collection(db, "erros_bipados");
 
-        // Memória Interna Ativa
+        const SENHA_LIDERANCA = "admin2846";
+
         let baseDeDados = new Map(JSON.parse(localStorage.getItem('spx_base')) || []);
         let resumoOperadores = JSON.parse(localStorage.getItem('spx_resumo')) || {};
         let errosRegistrados = [];
         let paginaAtiva = 'receive';
 
-        // Inicializa o contador visual de pacotes se a base já existir localmente
         if (baseDeDados.size > 0) {
             document.getElementById('status-msg').innerHTML = `<span style="color: #27ae60;">✔ Base ativa em memória: ${baseDeDados.size} pacotes carregados.</span>`;
         }
 
-        // 1. SINCRONIZADOR CLOUD EM TEMPO REAL
-        onSnapshot(query(colErros, orderBy("timestamp", "desc")), (snapshot) => {
-            errosRegistrados = [];
-            snapshot.forEach((doc) => {
-                const dados = doc.data();
-                errosRegistrados.push(dados);
-            });
+        // FUNÇÃO DE CORREÇÃO CRÍTICA: Mantém os totais salvos e apenas remapeia os erros
+        function processarContagemErros() {
+            // Puxa a estrutura salva para não zerar os validados importados do CSV
+            const resumoSalvo = JSON.parse(localStorage.getItem('spx_resumo')) || {};
             
-            // Limpa contagem de erros antes de reprocessar do Cloud
+            // Restaura o total de validados antes de contar os erros vindos da nuvem
+            Object.keys(resumoSalvo).forEach(op => {
+                if (!resumoOperadores[op]) {
+                    resumoOperadores[op] = { total: resumoSalvo[op].total, erros: 0 };
+                } else {
+                    resumoOperadores[op].total = resumoSalvo[op].total;
+                    resumoOperadores[op].erros = 0;
+                }
+            });
+
+            // Zera erros de quem sobrou na memória por segurança
             Object.keys(resumoOperadores).forEach(op => {
                 resumoOperadores[op].erros = 0;
             });
 
-            // Re-mapeia os erros sincronizados
+            // Soma os erros vindos em tempo real da Nuvem Firebase
             errosRegistrados.forEach(e => {
-                if (resumoOperadores[e.op]) {
-                    resumoOperadores[e.op].erros++;
+                if (!resumoOperadores[e.op]) {
+                    resumoOperadores[e.op] = { total: 0, erros: 0 };
                 }
+                resumoOperadores[e.op].erros++;
             });
+        }
 
+        // 1. SINCRONIZADOR CLOUD EM TEMPO REAL (Garante persistência ao fechar/abrir)
+        onSnapshot(query(colErros, orderBy("timestamp", "desc")), (snapshot) => {
+            errosRegistrados = [];
+            snapshot.forEach((documento) => {
+                errosRegistrados.push({ id_nuvem: documento.id, ...documento.data() });
+            });
+            
+            processarContagemErros();
             document.getElementById('cloud-status').innerHTML = "🟢 CLOUD ONLINE SYNCED";
             
-            // Força a atualização da tela aberta no momento para exibir mudanças de outros PCs instantaneamente
+            // Atualiza a visualização da tela atual sem perder dados
             if (paginaAtiva === 'bipar') renderizarBipsRecentes();
             if (paginaAtiva === 'audit') renderizarPerformance();
             if (paginaAtiva === 'diario') renderizarHistoricoDiario();
@@ -168,14 +222,13 @@
         window.processarBip = async function(e) {
             if (e.key === "Enter") {
                 const code = e.target.value.trim();
+                e.target.value = ""; 
+                
                 if (!code) return;
 
                 const op = baseDeDados.get(code) || "Não Encontrado na Base";
                 const data = new Date().toLocaleDateString('pt-BR');
                 const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-                // Trava o input para evitar bip duplo acidental rápido
-                e.target.disabled = true;
 
                 try {
                     await addDoc(colErros, {
@@ -189,26 +242,67 @@
                     alert("Erro crítico ao salvar no Cloud. Verifique sua conexão.");
                     console.error(err);
                 }
-
-                e.target.disabled = false;
-                e.target.value = "";
-                e.target.focus();
             }
         }
 
-        // 3. RENDERIZADORES DE TABELA
+        // 3. RENDERIZADORES DE TABELA + EXCLUSÃO INDIVIDUAL
         window.renderizarBipsRecentes = function() {
             const tbody = document.querySelector('#tabela-recente tbody');
-            tbody.innerHTML = errosRegistrados.slice(0, 50).map(e => 
-                `<tr><td>${e.hora}</td><td style="font-family: monospace; font-weight: 600;">${e.code}</td><td>${e.op}</td></tr>`
+            tbody.innerHTML = errosRegistrados.map(e => 
+                `<tr>
+                    <td>${e.hora}</td>
+                    <td style="font-family: monospace; font-weight: 600;">${e.code}</td>
+                    <td>
+                        <button class="btn-delete-item" onclick="deletarBipIndividual('${e.id_nuvem}')" title="Excluir este código">🗑️</button>
+                    </td>
+                </tr>`
             ).join('');
+        }
+
+        // EXCLUIR APENAS UMA BR ESPECÍFICA DO BANCO
+        window.deletarBipIndividual = async function(idNuvem) {
+            if(confirm("Deseja realmente remover este código bipado do sistema?")) {
+                try {
+                    await deleteDoc(doc(db, "erros_bipados", idNuvem));
+                } catch (err) {
+                    alert("Erro ao remover o item do Cloud.");
+                    console.error(err);
+                }
+            }
+        }
+
+        // RESET COMPLETO DA PÁGINA DE ERROS DE ETIQUETAGEM
+        window.resetarPaginaBips = async function() {
+            if (confirm("🚨 ATENÇÃO:\nEsta ação apagará permanentemente todos os bips registrados nesta página da Nuvem. Deseja prosseguir?")) {
+                try {
+                    document.getElementById('cloud-status').innerHTML = "🔄 Resetando bips...";
+                    const q = await getDocs(colErros);
+                    const promessas = [];
+                    q.forEach((documento) => {
+                        promessas.push(deleteDoc(documento.ref));
+                    });
+                    await Promise.all(promessas);
+                    alert("Página de bips resetada com sucesso!");
+                } catch (err) {
+                    alert("Erro ao formatar os bips da nuvem.");
+                    console.error(err);
+                }
+            }
         }
 
         window.renderizarPerformance = function() {
             const tbody = document.querySelector('#tabela-perf tbody');
+            const tfoot = document.querySelector('#tabela-perf tfoot');
+            
+            let totalGeralValidado = 0;
+            let totalGeralErros = 0;
+
             tbody.innerHTML = Object.entries(resumoOperadores)
                 .sort((a, b) => b[1].total - a[1].total)
                 .map(([nome, d]) => {
+                    totalGeralValidado += d.total;
+                    totalGeralErros += d.erros;
+
                     const acuracidade = d.total > 0 ? (((d.total - d.erros) / d.total) * 100).toFixed(1) : "0.0";
                     let classeBadge = "badge-success";
                     if (acuracidade < 95) classeBadge = "badge-warning";
@@ -221,6 +315,87 @@
                         <td class="${classeBadge}">${acuracidade}%</td>
                     </tr>`;
                 }).join('');
+
+            const acuracidadeGeral = totalGeralValidado > 0 ? (((totalGeralValidado - totalGeralErros) / totalGeralValidado) * 100).toFixed(1) : "0.0";
+            
+            tfoot.innerHTML = `
+                <tr class="total-row">
+                    <td style="text-align: left; padding-left: 20px;">TOTAL GERAL</td>
+                    <td>${totalGeralValidado}</td>
+                    <td>${totalGeralErros}</td>
+                    <td>${acuracidadeGeral}%</td>
+                </tr>`;
+        }
+
+        window.copiarPerformanceGeral = function() {
+            if (Object.keys(resumoOperadores).length === 0) {
+                alert("Nenhum dado de performance carregado em memória.");
+                return;
+            }
+
+            let texto = `📊 *MATRIZ DE PERFORMANCE ACUMULADA - SPX*\n\n`;
+            texto += `*Operador | Validados | Erros | Acuracidade*\n`;
+            texto += `--------------------------------------------------\n`;
+
+            let totalValidado = 0;
+            let totalErros = 0;
+
+            Object.entries(resumoOperadores)
+                .sort((a, b) => b[1].total - a[1].total)
+                .forEach(([nome, d]) => {
+                    totalValidado += d.total;
+                    totalErros += d.erros;
+                    const acuracidade = d.total > 0 ? (((d.total - d.erros) / d.total) * 100).toFixed(1) : "0.0";
+                    texto += `• ${nome} | Val: ${d.total} | Err: ${d.erros} | *${acuracidade}%*\n`;
+                });
+
+            const acuracidadeGeral = totalValidado > 0 ? (((totalValidado - totalErros) / totalValidado) * 100).toFixed(1) : "0.0";
+            texto += `--------------------------------------------------\n`;
+            texto += `🏆 *TOTAL GERAL DA OPERAÇÃO:*\n`;
+            texto += `• Pacotes Validados: ${totalValidado}\n`;
+            texto += `• Total de Erros: ${totalErros}\n`;
+            texto += `• Acuracidade Média Geral: *${acuracidadeGeral}%*`;
+
+            navigator.clipboard.writeText(texto).then(() => {
+                alert("Tabela de Performance copiada com sucesso!");
+            }).catch(err => {
+                console.error("Erro ao copiar performance: ", err);
+            });
+        }
+
+        window.exportarPerformanceCSV = function() {
+            if (Object.keys(resumoOperadores).length === 0) {
+                alert("Nenhum dado disponível para exportação.");
+                return;
+            }
+
+            let csvContent = "\uFEFF"; 
+            csvContent += "Operador;Total Validado;Total Erros;Acuracidade %\n";
+
+            let totalValidado = 0;
+            let totalErros = 0;
+
+            Object.entries(resumoOperadores)
+                .sort((a, b) => b[1].total - a[1].total)
+                .forEach(([nome, d]) => {
+                    totalValidado += d.total;
+                    totalErros += d.erros;
+                    const acuracidade = d.total > 0 ? (((d.total - d.erros) / d.total) * 100).toFixed(1) : "0.0";
+                    csvContent += `${nome};${d.total};${d.erros};${acuracidade}%\n`;
+                });
+
+            const acuracidadeGeral = totalValidado > 0 ? (((totalValidado - totalErros) / totalValidado) * 100).toFixed(1) : "0.0";
+            csvContent += `TOTAL GERAL;${totalValidado};${totalErros};${acuracidadeGeral}%\n`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `performance_geral_spx.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         window.renderizarHistoricoDiario = function() {
@@ -239,15 +414,26 @@
                 return new Date(anoB, mesB, diaB) - new Date(anoA, mesA, diaA);
             });
 
+            window.dadosHistoricoGlobais = histPorData;
+
             datasOrdenadas.forEach(data => {
                 const ops = histPorData[data];
                 const totalDoDia = Object.values(ops).reduce((acc, curr) => acc + curr, 0);
 
                 container.innerHTML += `
-                    <div class="card" style="padding:0; overflow:hidden;">
+                    <div class="card" style="padding:0; overflow:hidden; margin-bottom: 20px;">
                         <table class="hist-table">
                             <thead>
-                                <tr><th colspan="2" class="date-header">📅 DATA: ${data} <span style="float: right; font-size: 11px; background: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 4px;">Total de Erros: ${totalDoDia}</span></th></tr>
+                                <tr>
+                                    <th colspan="2" class="date-header">
+                                        📅 DATA: ${data} 
+                                        <span style="float: right; font-size: 11px; background: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 4px; display: flex; align-items: center; gap: 5px;">
+                                            Total de Erros: ${totalDoDia}
+                                            <button class="btn-utility" onclick="copiarHistoricoDia('${data}')">📋 Copiar</button>
+                                            <button class="btn-utility" onclick="exportarHistoricoDiaCSV('${data}')">📥 Exportar CSV</button>
+                                        </span>
+                                    </th>
+                                </tr>
                                 <tr style="background: #34495e;"><th style="text-align: left; padding-left: 20px;">Operador</th><th style="width: 25%;">Qtd Erros</th></tr>
                             </thead>
                             <tbody>
@@ -264,7 +450,47 @@
             }
         }
 
-        // 4. LEITOR DE PLANILHAS CSV
+        window.copiarHistoricoDia = function(data) {
+            const ops = window.dadosHistoricoGlobais[data];
+            if(!ops) return;
+            
+            let texto = `📊 *RELATÓRIO DE ERROS - SPX (${data})*\n\n`;
+            Object.entries(ops).sort((a,b) => b[1] - a[1]).forEach(([nome, qtd]) => {
+                texto += `• ${nome}: ${qtd} erro(s)\n`;
+            });
+            
+            const total = Object.values(ops).reduce((acc, curr) => acc + curr, 0);
+            texto += `\n*Total Geral do Dia:* ${total} erros.`;
+
+            navigator.clipboard.writeText(texto).then(() => {
+                alert(`Resumo de ${data} copiado para a Área de Transferência!`);
+            }).catch(err => {
+                console.error("Erro ao copiar: ", err);
+            });
+        }
+
+        window.exportarHistoricoDiaCSV = function(data) {
+            const ops = window.dadosHistoricoGlobais[data];
+            if(!ops) return;
+
+            let csvContent = "\uFEFF"; 
+            csvContent += "Operador;Quantidade de Erros;Data\n";
+
+            Object.entries(ops).sort((a,b) => b[1] - a[1]).forEach(([nome, qtd]) => {
+                csvContent += `${nome};${qtd};${data}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `erros_spx_${data.replace(/\//g, '-')}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         window.lerArquivo = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -301,21 +527,40 @@
                     }
                 }
 
-                // Salva base tratada localmente para preservar velocidade de resposta imediata
                 localStorage.setItem('spx_base', JSON.stringify(Array.from(baseDeDados.entries())));
                 localStorage.setItem('spx_resumo', JSON.stringify(resumoOperadores));
-                document.getElementById('status-msg').innerHTML = `<span style="color: #27ae60;">✔ Processamento concluído! Mapeados ${baseDeDados.size} pacotes ativos.</span>`;
+                document.getElementById('status-msg').innerHTML = `<span style="color: #27ae60;">✔ Base atualizada! Mapeados ${baseDeDados.size} pacotes ativos.</span>`;
                 
-                // Recalcula contagem de erros ativos sobre a nova planilha injetada
-                errosRegistrados.forEach(e => {
-                    if (resumoOperadores[e.op]) resumoOperadores[e.op].erros++;
-                });
+                processarContagemErros();
+                if (paginaAtiva === 'audit') renderizarPerformance();
+                if (paginaAtiva === 'diario') renderizarHistoricoDiario();
             };
             reader.readAsText(file, "UTF-8");
         }
 
-        // 5. NAVEGAÇÃO ENTRE ABAS
+        window.resetarBaseLocal = function() {
+            if(confirm("Deseja mesmo limpar a planilha de operadores guardada neste computador?\n\nIsso não apagará os erros armazenados na nuvem.")) {
+                baseDeDados.clear();
+                resumoOperadores = {};
+                localStorage.removeItem('spx_base');
+                localStorage.removeItem('spx_resumo');
+                document.getElementById('csv-file').value = "";
+                document.getElementById('status-msg').innerHTML = "<span style='color: #7f8c8d;'>Planilha local removida.</span>";
+                processarContagemErros();
+                if (paginaAtiva === 'audit') renderizarPerformance();
+                if (paginaAtiva === 'diario') renderizarHistoricoDiario();
+            }
+        }
+
         window.showPage = function(id, btn) {
+            if (id === 'audit' || id === 'diario') {
+                const autenticado = prompt("🔒 Área restrita à liderança.\nDigite a senha de acesso:");
+                if (autenticado !== SENHA_LIDERANCA) {
+                    alert("Acesso negado. Senha incorreta.");
+                    return; 
+                }
+            }
+
             paginaAtiva = id;
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
@@ -331,21 +576,25 @@
             if (id === 'diario') renderizarHistoricoDiario();
         }
 
-        // 6. LIMPEZA TOTAL DE BANCO ONLINE DE DADOS (DANGER ZONE)
         window.limparTudo = async function() {
-            if (confirm("🚨 ATENÇÃO MÁXIMA:\n\nEsta ação vai apagar permanentemente todos os registros de erros do banco Cloud (Firebase) para TODOS os computadores conectados.\n\nDeseja mesmo prosseguir?")) {
+            const autenticado = prompt("🔒 Confirme a senha Master para executar a formatação do banco:");
+            if (autenticado !== SENHA_LIDERANCA) {
+                alert("Ação cancelada. Senha incorreta.");
+                return;
+            }
+
+            if (confirm("🚨 CONFIRMAÇÃO FINAL:\nEsta ação limpará o banco remotos de todos os PCs conectados. Prosseguir?")) {
                 document.getElementById('cloud-status').innerHTML = "🔄 Executando limpeza geral...";
                 try {
                     const q = await getDocs(colErros);
                     const deletarPromessas = [];
-                    q.forEach((doc) => {
-                        deletarPromessas.push(deleteDoc(doc.ref));
+                    q.forEach((documento) => {
+                        deletarPromessas.push(deleteDoc(documento.ref));
                     });
-                    // Deleta em lote controlado de alto desempenho
                     await Promise.all(deletarPromessas);
                     
                     localStorage.clear();
-                    alert("Sucesso! Banco de dados Cloud e caches locais limpos.");
+                    alert("Sucesso! Banco Cloud resetado.");
                     location.reload();
                 } catch (err) {
                     alert("Erro ao limpar dados remotos.");
