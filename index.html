@@ -7,73 +7,99 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         body { display: flex; height: 100vh; background-color: #f0f2f5; overflow: hidden; }
+        
+        /* Lateral */
         .sidebar { width: 230px; background-color: #1e272e; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar h2 { padding: 20px; text-align: center; background-color: #ee4d2d; color: white; font-size: 16px; }
-        .menu-btn { padding: 12px 20px; border: none; background: none; color: #d2dae2; text-align: left; cursor: pointer; font-size: 13px; border-left: 4px solid transparent; transition: 0.3s; }
+        .sidebar h2 { padding: 20px; text-align: center; background-color: #ee4d2d; color: white; font-size: 16px; letter-spacing: 0.5px; }
+        .menu-btn { padding: 14px 20px; border: none; background: none; color: #d2dae2; text-align: left; cursor: pointer; font-size: 13px; border-left: 4px solid transparent; transition: 0.2s; }
+        .menu-btn:hover { background-color: #2c3e50; color: white; }
         .menu-btn.active { background-color: #2f3542; border-left: 4px solid #ee4d2d; color: white; font-weight: bold; }
-        .content { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
-        .page { display: none; width: 100%; max-width: 800px; }
+        #cloud-status { font-size: 11px; text-align: center; padding: 10px; color: #a4b0be; background-color: #141a1f; margin-top: auto; font-weight: 600; }
+
+        /* Área de Conteúdo */
+        .content { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
+        .page { display: none; width: 100%; max-width: 850px; animation: fadeIn 0.2s ease-in-out; }
         .page.active { display: block; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h1 { margin-bottom: 15px; color: #2d3436; font-size: 18px; border-left: 5px solid #ee4d2d; padding-left: 10px; }
-        .hist-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .hist-table th { background: #2d3436; color: white; padding: 10px; border: 1px solid #444; font-size: 11px; }
-        .hist-table td { padding: 8px; border: 1px solid #dfe6e9; text-align: center; }
-        .date-header { background: #ee4d2d !important; color: white !important; text-align: left !important; font-size: 14px !important; padding: 10px !important; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Elementos de Interface */
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; width: 100%; }
+        h1 { margin-bottom: 20px; color: #2d3436; font-size: 20px; border-left: 5px solid #ee4d2d; padding-left: 12px; }
+        
+        /* Tabelas Dinâmicas */
+        .table-wrapper { padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #dfe6e9; border-radius: 6px; }
+        .hist-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
+        .hist-table thead { position: sticky; top: 0; background: #2d3436; z-index: 2; }
+        .hist-table th { color: white; padding: 12px 10px; font-size: 11px; text-transform: uppercase; font-weight: 600; }
+        .hist-table td { padding: 10px; border-bottom: 1px solid #dfe6e9; color: #2d3436; }
+        .hist-table tbody tr:last-child td { border-bottom: none; }
+        .hist-table tr:nth-child(even) { background-color: #f8f9fa; }
+        
+        /* Status e Badges */
+        .date-header { background: #ee4d2d !important; color: white !important; text-align: left !important; font-size: 14px !important; padding: 12px !important; font-weight: bold; }
         .badge-error { color: #d63031; font-weight: 800; font-size: 14px; }
-        .scan-input { width: 100%; padding: 15px; font-size: 22px; text-align: center; border: 2px solid #ee4d2d; border-radius: 8px; outline: none; }
-        .btn-danger { background: #d63031; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 11px; margin-top: auto; }
-        #cloud-status { font-size: 10px; text-align: center; padding: 5px; color: #888; }
+        .badge-success { color: #2ed573; font-weight: bold; }
+        .badge-warning { color: #ffa502; font-weight: bold; }
+        
+        /* Inputs e Botões */
+        .scan-input { width: 100%; padding: 18px; font-size: 24px; text-align: center; border: 2px solid #ee4d2d; border-radius: 8px; outline: none; box-shadow: 0 4px 10px rgba(238, 77, 45, 0.1); transition: 0.2s; }
+        .scan-input:focus { box-shadow: 0 4px 15px rgba(238, 77, 45, 0.25); }
+        .file-input { font-size: 14px; padding: 10px 0; }
+        .btn-danger { background: #d63031; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: calc(100% - 40px); font-size: 12px; font-weight: bold; margin: 0 20px 20px 20px; transition: 0.2s; text-align: center; }
+        .btn-danger:hover { background: #b32424; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
         <h2>LOGISTIQUE V10</h2>
-        <button class="menu-btn active" onclick="showPage('receive', this)">📥 1. Importar Base</button>
-        <button class="menu-btn" onclick="showPage('bipar', this)">🔦 2. Auditoria Erros</button>
-        <button class="menu-btn" onclick="showPage('audit', this)">📑 3. Performance</button>
-        <button class="menu-btn" onclick="showPage('diario', this)">📅 4. Histórico Diário</button>
-        <div id="cloud-status">☁️ Conectando ao Cloud...</div>
-        <div style="padding: 20px; margin-top: auto;">
-            <button class="btn-danger" onclick="limparTudo()">⚠️ LIMPAR TUDO</button>
-        </div>
+        <button id="btn-receive" class="menu-btn active" onclick="showPage('receive', this)">📥 1. Importar Base</button>
+        <button id="btn-bipar" class="menu-btn" onclick="showPage('bipar', this)">🔦 2. Auditoria Erros</button>
+        <button id="btn-audit" class="menu-btn" onclick="showPage('audit', this)">📑 3. Performance</button>
+        <button id="btn-diario" class="menu-btn" onclick="showPage('diario', this)">📅 4. Histórico Diário</button>
+        
+        <div id="cloud-status">🔄 Conectando ao Cloud...</div>
+        <button class="btn-danger" onclick="limparTudo()">⚠️ LIMPAR TUDO</button>
     </div>
 
     <div class="content">
         <div id="receive" class="page active">
-            <h1>Importar Base</h1>
+            <h1>Importar Base Operacional</h1>
             <div class="card">
-                <input type="file" id="csv-file" accept=".csv" onchange="lerArquivo(event)">
-                <div id="status-msg" style="margin-top: 15px;"></div>
+                <input type="file" id="csv-file" class="file-input" accept=".csv" onchange="lerArquivo(event)">
+                <div id="status-msg" style="margin-top: 15px; font-weight: 600;"></div>
             </div>
         </div>
 
         <div id="bipar" class="page">
-            <h1>Bipar Erros</h1>
+            <h1>Bipar Erros detectados</h1>
             <div class="card">
-                <input type="text" id="scanner" class="scan-input" placeholder="Bipe aqui..." onkeypress="processarBip(event)">
+                <input type="text" id="scanner" class="scan-input" placeholder="Bipe o código de barras aqui..." onkeypress="processarBip(event)" autocomplete="off">
             </div>
-            <div class="card" style="padding:0; max-height: 300px; overflow-y: auto;">
+            <div class="card table-wrapper">
                 <table class="hist-table" id="tabela-recente">
-                    <thead><tr><th>Hora</th><th>Código</th><th>Operador</th></tr></thead>
+                    <thead>
+                        <tr><th style="width: 20%;">Hora</th><th style="width: 40%;">Código</th><th style="width: 40%;">Operador do Erro</th></tr>
+                    </thead>
                     <tbody></tbody>
                 </table>
             </div>
         </div>
 
         <div id="audit" class="page">
-            <h1>Performance Acumulada</h1>
-            <div class="card" style="padding:0">
+            <h1>Performance de Acuracidade</h1>
+            <div class="card table-wrapper" style="max-height: 550px;">
                 <table class="hist-table" id="tabela-perf">
-                    <thead><tr><th>Operador</th><th>Total Itens</th><th>Total Erros</th><th>%</th></tr></thead>
+                    <thead>
+                        <tr><th style="text-align: left; padding-left: 20px;">Operador</th><th>Total Validado</th><th>Total Erros</th><th>Acuracidade %</th></tr>
+                    </thead>
                     <tbody></tbody>
                 </table>
             </div>
         </div>
 
         <div id="diario" class="page">
-            <h1>Relatório de Erros por Dia</h1>
+            <h1>Relatório Quantitativo Diário</h1>
             <div id="container-historico"></div>
         </div>
     </div>
@@ -96,127 +122,235 @@
         const db = getFirestore(app);
         const colErros = collection(db, "erros_bipados");
 
-        // Variáveis Locais
+        // Memória Interna Ativa
         let baseDeDados = new Map(JSON.parse(localStorage.getItem('spx_base')) || []);
         let resumoOperadores = JSON.parse(localStorage.getItem('spx_resumo')) || {};
         let errosRegistrados = [];
+        let paginaAtiva = 'receive';
 
-        // 1. OUVIR MUDANÇAS NO CLOUD (Tempo Real)
+        // Inicializa o contador visual de pacotes se a base já existir localmente
+        if (baseDeDados.size > 0) {
+            document.getElementById('status-msg').innerHTML = `<span style="color: #27ae60;">✔ Base ativa em memória: ${baseDeDados.size} pacotes carregados.</span>`;
+        }
+
+        // 1. SINCRONIZADOR CLOUD EM TEMPO REAL
         onSnapshot(query(colErros, orderBy("timestamp", "desc")), (snapshot) => {
             errosRegistrados = [];
-            snapshot.forEach((doc) => errosRegistrados.push(doc.data()));
+            snapshot.forEach((doc) => {
+                const dados = doc.data();
+                errosRegistrados.push(dados);
+            });
             
-            // Atualiza o resumo de erros na memória local baseada no Cloud
-            Object.keys(resumoOperadores).forEach(op => resumoOperadores[op].erros = 0);
-            errosRegistrados.forEach(e => {
-                if(resumoOperadores[e.op]) resumoOperadores[e.op].erros++;
+            // Limpa contagem de erros antes de reprocessar do Cloud
+            Object.keys(resumoOperadores).forEach(op => {
+                resumoOperadores[op].erros = 0;
             });
 
-            document.getElementById('cloud-status').innerHTML = "☁️ Online - Sincronizado";
-            renderizarBipsRecentes();
+            // Re-mapeia os erros sincronizados
+            errosRegistrados.forEach(e => {
+                if (resumoOperadores[e.op]) {
+                    resumoOperadores[e.op].erros++;
+                }
+            });
+
+            document.getElementById('cloud-status').innerHTML = "🟢 CLOUD ONLINE SYNCED";
+            
+            // Força a atualização da tela aberta no momento para exibir mudanças de outros PCs instantaneamente
+            if (paginaAtiva === 'bipar') renderizarBipsRecentes();
+            if (paginaAtiva === 'audit') renderizarPerformance();
+            if (paginaAtiva === 'diario') renderizarHistoricoDiario();
+        }, (error) => {
+            console.error("Falha na sincronização cloud: ", error);
+            document.getElementById('cloud-status').innerHTML = "🔴 ERRO DE CONEXÃO CLOUD";
         });
 
-        // 2. BIPAR E SALVAR NO CLOUD
+        // 2. ADICIONAR ERRO NO BANCO ONLINE
         window.processarBip = async function(e) {
             if (e.key === "Enter") {
                 const code = e.target.value.trim();
                 if (!code) return;
-                const op = baseDeDados.get(code) || "Não Encontrado";
+
+                const op = baseDeDados.get(code) || "Não Encontrado na Base";
                 const data = new Date().toLocaleDateString('pt-BR');
-                const hora = new Date().toLocaleTimeString();
+                const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                // Trava o input para evitar bip duplo acidental rápido
+                e.target.disabled = true;
 
                 try {
                     await addDoc(colErros, {
-                        op, code, data, hora,
+                        op,
+                        code,
+                        data,
+                        hora,
                         timestamp: Date.now()
                     });
                 } catch (err) {
-                    console.error("Erro ao salvar no Cloud:", err);
+                    alert("Erro crítico ao salvar no Cloud. Verifique sua conexão.");
+                    console.error(err);
                 }
+
+                e.target.disabled = false;
                 e.target.value = "";
+                e.target.focus();
             }
         }
 
-        // 3. FUNÇÕES DE RENDERIZAÇÃO
+        // 3. RENDERIZADORES DE TABELA
         window.renderizarBipsRecentes = function() {
             const tbody = document.querySelector('#tabela-recente tbody');
             tbody.innerHTML = errosRegistrados.slice(0, 50).map(e => 
-                `<tr><td>${e.hora}</td><td>${e.code}</td><td>${e.op}</td></tr>`
+                `<tr><td>${e.hora}</td><td style="font-family: monospace; font-weight: 600;">${e.code}</td><td>${e.op}</td></tr>`
             ).join('');
         }
 
         window.renderizarPerformance = function() {
             const tbody = document.querySelector('#tabela-perf tbody');
-            tbody.innerHTML = Object.entries(resumoOperadores).sort((a,b) => b[1].total - a[1].total).map(([nome, d]) => {
-                const ac = d.total > 0 ? (((d.total - d.erros) / d.total) * 100).toFixed(1) : "0";
-                return `<tr><td style="text-align:left;">${nome}</td><td>${d.total}</td><td class="badge-error">${d.erros}</td><td>${ac}%</td></tr>`;
-            }).join('');
+            tbody.innerHTML = Object.entries(resumoOperadores)
+                .sort((a, b) => b[1].total - a[1].total)
+                .map(([nome, d]) => {
+                    const acuracidade = d.total > 0 ? (((d.total - d.erros) / d.total) * 100).toFixed(1) : "0.0";
+                    let classeBadge = "badge-success";
+                    if (acuracidade < 95) classeBadge = "badge-warning";
+                    if (acuracidade < 90) classeBadge = "badge-error";
+
+                    return `<tr>
+                        <td style="text-align: left; padding-left: 20px; font-weight: 600;">${nome}</td>
+                        <td>${d.total}</td>
+                        <td class="${d.erros > 0 ? 'badge-error' : ''}">${d.erros}</td>
+                        <td class="${classeBadge}">${acuracidade}%</td>
+                    </tr>`;
+                }).join('');
         }
 
         window.renderizarHistoricoDiario = function() {
             const container = document.getElementById('container-historico');
             container.innerHTML = "";
+
             const histPorData = {};
             errosRegistrados.forEach(e => {
                 if (!histPorData[e.data]) histPorData[e.data] = {};
                 histPorData[e.data][e.op] = (histPorData[e.data][e.op] || 0) + 1;
             });
-            Object.keys(histPorData).sort().reverse().forEach(data => {
+
+            const datasOrdenadas = Object.keys(histPorData).sort((a, b) => {
+                const [diaA, mesA, anoA] = a.split('/').map(Number);
+                const [diaB, mesB, anoB] = b.split('/').map(Number);
+                return new Date(anoB, mesB, diaB) - new Date(anoA, mesA, diaA);
+            });
+
+            datasOrdenadas.forEach(data => {
                 const ops = histPorData[data];
+                const totalDoDia = Object.values(ops).reduce((acc, curr) => acc + curr, 0);
+
                 container.innerHTML += `
-                    <div class="card" style="padding:0">
+                    <div class="card" style="padding:0; overflow:hidden;">
                         <table class="hist-table">
-                            <thead><tr><th colspan="2" class="date-header">📅 DATA: ${data}</th></tr></thead>
-                            <tbody>${Object.entries(ops).map(([nome, qtd]) => `<tr><td style="text-align:left;">${nome}</td><td class="badge-error">${qtd}</td></tr>`).join('')}</tbody>
+                            <thead>
+                                <tr><th colspan="2" class="date-header">📅 DATA: ${data} <span style="float: right; font-size: 11px; background: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 4px;">Total de Erros: ${totalDoDia}</span></th></tr>
+                                <tr style="background: #34495e;"><th style="text-align: left; padding-left: 20px;">Operador</th><th style="width: 25%;">Qtd Erros</th></tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(ops).sort((a,b) => b[1] - a[1]).map(([nome, qtd]) => `
+                                    <tr><td style="text-align: left; padding-left: 20px; font-weight: 600;">${nome}</td><td class="badge-error">${qtd}</td></tr>
+                                `).join('')}
+                            </tbody>
                         </table>
                     </div>`;
             });
+
+            if (datasOrdenadas.length === 0) {
+                container.innerHTML = "<p style='text-align:center; color:#7f8c8d; margin-top:20px;'>Nenhum log de erro localizado na nuvem.</p>";
+            }
         }
 
+        // 4. LEITOR DE PLANILHAS CSV
         window.lerArquivo = function(event) {
             const file = event.target.files[0];
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 const linhas = e.target.result.split(/\r?\n/);
-                const cabecalho = linhas[0].split(linhas[0].includes(';') ? ';' : ',');
+                if (linhas.length === 0 || !linhas[0]) return;
+
+                const divisor = linhas[0].includes(';') ? ';' : ',';
+                const cabecalho = linhas[0].split(divisor);
                 const colTrack = cabecalho.findIndex(c => c.trim().includes('SPX Tracking Number'));
                 const colOp = cabecalho.findIndex(c => c.trim().toLowerCase().includes('operator'));
 
+                if (colTrack === -1) {
+                    document.getElementById('status-msg').innerHTML = `<span style="color: #d63031;">❌ Coluna 'SPX Tracking Number' não localizada no CSV.</span>`;
+                    return;
+                }
+
                 baseDeDados.clear();
                 resumoOperadores = {};
+
                 for (let i = 1; i < linhas.length; i++) {
-                    const col = linhas[i].split(linhas[i].includes(';') ? ';' : ',');
+                    if (!linhas[i]) continue;
+                    const col = linhas[i].split(divisor);
+                    
                     if (col[colTrack]) {
                         const track = col[colTrack].trim();
                         const op = col[colOp] ? col[colOp].replace(/\[.*?\]/, '').trim() : "Desconhecido";
+                        
                         baseDeDados.set(track, op);
                         if (!resumoOperadores[op]) resumoOperadores[op] = { total: 0, erros: 0 };
                         resumoOperadores[op].total++;
                     }
                 }
+
+                // Salva base tratada localmente para preservar velocidade de resposta imediata
                 localStorage.setItem('spx_base', JSON.stringify(Array.from(baseDeDados.entries())));
                 localStorage.setItem('spx_resumo', JSON.stringify(resumoOperadores));
-                document.getElementById('status-msg').innerHTML = "✔ Base Local Atualizada!";
+                document.getElementById('status-msg').innerHTML = `<span style="color: #27ae60;">✔ Processamento concluído! Mapeados ${baseDeDados.size} pacotes ativos.</span>`;
+                
+                // Recalcula contagem de erros ativos sobre a nova planilha injetada
+                errosRegistrados.forEach(e => {
+                    if (resumoOperadores[e.op]) resumoOperadores[e.op].erros++;
+                });
             };
-            reader.readAsText(file);
+            reader.readAsText(file, "UTF-8");
         }
 
+        // 5. NAVEGAÇÃO ENTRE ABAS
         window.showPage = function(id, btn) {
+            paginaAtiva = id;
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            
             document.getElementById(id).classList.add('active');
             btn.classList.add('active');
-            if(id === 'audit') renderizarPerformance();
-            if(id === 'diario') renderizarHistoricoDiario();
-            if(id === 'bipar') setTimeout(() => document.getElementById('scanner').focus(), 100);
+            
+            if (id === 'bipar') {
+                renderizarBipsRecentes();
+                setTimeout(() => document.getElementById('scanner').focus(), 80);
+            }
+            if (id === 'audit') renderizarPerformance();
+            if (id === 'diario') renderizarHistoricoDiario();
         }
 
+        // 6. LIMPEZA TOTAL DE BANCO ONLINE DE DADOS (DANGER ZONE)
         window.limparTudo = async function() {
-            if(confirm("Isso apagará os dados NO CLOUD para todos os usuários. Confirmar?")) {
-                const q = await getDocs(colErros);
-                q.forEach(async (d) => await deleteDoc(d.ref));
-                localStorage.clear();
-                location.reload();
+            if (confirm("🚨 ATENÇÃO MÁXIMA:\n\nEsta ação vai apagar permanentemente todos os registros de erros do banco Cloud (Firebase) para TODOS os computadores conectados.\n\nDeseja mesmo prosseguir?")) {
+                document.getElementById('cloud-status').innerHTML = "🔄 Executando limpeza geral...";
+                try {
+                    const q = await getDocs(colErros);
+                    const deletarPromessas = [];
+                    q.forEach((doc) => {
+                        deletarPromessas.push(deleteDoc(doc.ref));
+                    });
+                    // Deleta em lote controlado de alto desempenho
+                    await Promise.all(deletarPromessas);
+                    
+                    localStorage.clear();
+                    alert("Sucesso! Banco de dados Cloud e caches locais limpos.");
+                    location.reload();
+                } catch (err) {
+                    alert("Erro ao limpar dados remotos.");
+                    console.error(err);
+                }
             }
         }
     </script>
