@@ -43,7 +43,7 @@
         .split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; align-items: start; margin-bottom: 20px; }
         @media (max-width: 900px) { .split-layout { grid-template-columns: 1fr; } }
 
-        /* Card de Destaque Master Inferior para o Total Consolidado */
+        /* Card de Destaque Master Inferior */
         .total-consolidado-card { background: #1e272e; color: white; border-radius: 8px; padding: 18px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .total-item { display: flex; align-items: center; gap: 15px; }
         .total-item-title { font-size: 11px; font-weight: 700; color: #a4b0be; text-transform: uppercase; letter-spacing: 0.8px; }
@@ -131,8 +131,6 @@
             <div class="page-header">
                 <h1>Matriz Digital de Performance Operacional</h1>
                 <div style="display:flex; gap:8px;">
-                    <button class="btn-utility" onclick="copiarPerformanceGeral()">📋 Copiar</button>
-                    <button class="btn-utility" onclick="exportarPerformanceCSV()">📥 CSV</button>
                     <button class="btn-print-report" onclick="window.print()">📥 Imprimir Report</button>
                 </div>
             </div>
@@ -230,7 +228,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // Importação do setDoc e doc adicionada para sincronizar a base na nuvem
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD4-kttLAn-QvxF7LIX-BMtTfCcz5HLnuk",
@@ -244,10 +243,11 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const colErros = collection(db, "erros_bipados");
+        const colConfig = collection(db, "configuracao_sistema");
         const SENHA_LIDERANCA = "admin2846";
 
-        let baseDeDados = new Map(JSON.parse(localStorage.getItem('spx_base')) || []);
-        let resumoOperadores = JSON.parse(localStorage.getItem('spx_resumo')) || {};
+        let baseDeDados = new Map();
+        let resumoOperadores = {};
         let errosRegistrados = [];
         let paginaAtiva = 'receive';
         const listaCoresBolinhas = ['#ee4d2d', '#9b59b6', '#3498db', '#f1c40f', '#1abc9c', '#e67e22', '#2ecc71', '#34495e'];
@@ -261,9 +261,24 @@
             return "#d63031";
         }
 
+        // NOVO: Ouvinte em tempo real da base de dados salva na nuvem
+        onSnapshot(doc(db, "configuracao_sistema", "base_operacional"), (docSnap) => {
+            if (docSnap.exists()) {
+                const dadosNuvem = docSnap.data();
+                baseDeDados = new Map(JSON.parse(dadosNuvem.base || "[]"));
+                resumoOperadores = JSON.parse(dadosNuvem.resumo || "{}");
+                document.getElementById('status-msg').innerHTML = "🟢 Base Operacional carregada via Nuvem.";
+            } else {
+                baseDeDados.clear();
+                resumoOperadores = {};
+                document.getElementById('status-msg').innerHTML = "⚠️ Nenhuma Base Operacional ativa na nuvem. Importe um CSV.";
+            }
+            processarContagemErros();
+            if (paginaAtiva === 'audit') renderizarPerformance();
+        });
+
         function processarContagemErros() {
-            const resumoSalvo = JSON.parse(localStorage.getItem('spx_resumo')) || {};
-            Object.keys(resumoSalvo).forEach(op => { resumoOperadores[op] = { total: resumoSalvo[op].total, erros: 0 }; });
+            // Limpa contagem de erros anterior mantendo a lista de operadores carregada
             Object.keys(resumoOperadores).forEach(op => { resumoOperadores[op].erros = 0; });
             errosRegistrados.forEach(e => {
                 if (!resumoOperadores[e.op]) resumoOperadores[e.op] = { total: 0, erros: 0 };
@@ -295,6 +310,8 @@
         window.renderizarPerformance = function() {
             const tbodyEsq = document.querySelector('#tabela-perf-esquerda tbody');
             const tbodyDir = document.querySelector('#tabela-perf-direita tbody');
+            if(!tbodyEsq || !tbodyDir) return;
+            
             let tVal = 0, tErr = 0;
             
             const dados = Object.entries(resumoOperadores).sort((a, b) => b[1].total - a[1].total);
@@ -326,12 +343,10 @@
             tbodyEsq.innerHTML = mapearLinhas(metadeEsquerda, 0);
             tbodyDir.innerHTML = mapearLinhas(metadeDireita, metadeIndex);
 
-            // Atualização dinâmica dos Cards de Topo
             document.getElementById('kpi-total-validado').innerText = tVal.toLocaleString();
             document.getElementById('kpi-total-erros').innerText = tErr.toLocaleString();
             document.getElementById('kpi-acuracidade-geral').innerText = tVal > 0 ? (((tVal - tErr) / tVal) * 100).toFixed(1) + "%" : "100%";
 
-            // Atualização dinâmica do NOVO CARD MASTER INFERIOR (Layout Limpo e imponente)
             document.getElementById('card-master-validado').innerText = tVal.toLocaleString();
             document.getElementById('card-master-erros').innerText = tErr.toLocaleString();
             document.getElementById('card-master-acuracidade').innerText = tVal > 0 ? (((tVal - tErr) / tVal) * 100).toFixed(1) + "%" : "100%";
@@ -388,31 +403,50 @@
 
         window.resetarPaginaBips = async () => { if(confirm("Limpar bips da nuvem?")) { (await getDocs(colErros)).forEach(async d => await deleteDoc(d.ref)); } };
 
+        // MODIFICADO: Agora grava diretamente na nuvem (Firestore) para refletir globalmente
         window.lerArquivo = (event) => {
             const reader = new FileReader();
-            reader.onload = (e) => {
+            document.getElementById('status-msg').innerHTML = "⏳ Processando base e enviando para nuvem...";
+            reader.onload = async (e) => {
                 const lines = e.target.result.split(/\r?\n/);
                 const div = lines[0].includes(';') ? ';' : ',';
                 const cab = lines[0].split(div);
                 const colT = cab.findIndex(c => c.trim().includes('SPX Tracking Number')), colO = cab.findIndex(c => c.trim().toLowerCase().includes('operator'));
-                baseDeDados.clear(); resumoOperadores = {};
+                
+                const temporariaBase = [];
+                const temporarioResumo = {};
+                
                 for (let i = 1; i < lines.length; i++) {
                     const col = lines[i].split(div);
                     if (col[colT]) {
                         const track = col[colT].trim(), op = col[colO] ? col[colO].replace(/\[.*?\]/, '').trim() : "Desconhecido";
-                        baseDeDados.set(track, op);
-                        if (!resumoOperadores[op]) resumoOperadores[op] = { total: 0, erros: 0 };
-                        resumoOperadores[op].total++;
+                        temporariaBase.push([track, op]);
+                        if (!temporarioResumo[op]) temporarioResumo[op] = { total: 0, erros: 0 };
+                        temporarioResumo[op].total++;
                     }
                 }
-                localStorage.setItem('spx_base', JSON.stringify(Array.from(baseDeDados.entries())));
-                localStorage.setItem('spx_resumo', JSON.stringify(resumoOperadores));
-                location.reload();
+                
+                try {
+                    // Envia a estrutura convertida para o Firebase global
+                    await setDoc(doc(db, "configuracao_sistema", "base_operacional"), {
+                        base: JSON.stringify(temporariaBase),
+                        resumo: JSON.stringify(temporarioResumo)
+                    });
+                    document.getElementById('status-msg').innerHTML = "✅ Base sincronizada globalmente na Nuvem!";
+                } catch (erroEnvio) {
+                    console.error(erroEnvio);
+                    document.getElementById('status-msg').innerHTML = "❌ Erro ao sincronizar com a Nuvem.";
+                }
             };
             reader.readAsText(event.target.files[0], "UTF-8");
         };
 
-        window.resetarBaseLocal = () => { if(confirm("Limpar base local?")) { localStorage.clear(); location.reload(); } };
+        // MODIFICADO: Remove a base do Firestore
+        window.resetarBaseLocal = async () => { 
+            if(confirm("Deseja apagar a Base Operacional da Nuvem? Isso afetará todas as telas conectadas.")) { 
+                await deleteDoc(doc(db, "configuracao_sistema", "base_operacional"));
+            } 
+        };
 
         window.showPage = (id, btn) => {
             if ((id === 'audit' || id === 'diario') && prompt("🔒 Senha:") !== SENHA_LIDERANCA) return;
@@ -425,7 +459,16 @@
             if (id === 'diario') renderizarHistoricoDiario();
         };
 
-        window.limparTudo = async () => { if(prompt("Senha Master:") === SENHA_LIDERANCA) { (await getDocs(colErros)).forEach(async d => await deleteDoc(d.ref)); localStorage.clear(); location.reload(); } };
+        window.limparTudo = async () => { 
+            if(prompt("Senha Master:") === SENHA_LIDERANCA) { 
+                // Limpa erros
+                const bips = await getDocs(colErros);
+                bips.forEach(async d => await deleteDoc(d.ref)); 
+                // Limpa base
+                await deleteDoc(doc(db, "configuracao_sistema", "base_operacional"));
+                location.reload(); 
+            } 
+        };
     </script>
 </body>
 </html>
