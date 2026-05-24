@@ -228,8 +228,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        // Importação do setDoc e doc adicionada para sincronizar a base na nuvem
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // Adicionado o updateDoc para fazer as correções em massa retroativas
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD4-kttLAn-QvxF7LIX-BMtTfCcz5HLnuk",
@@ -243,7 +243,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const colErros = collection(db, "erros_bipados");
-        const colConfig = collection(db, "configuracao_sistema");
         const SENHA_LIDERANCA = "admin2846";
 
         let baseDeDados = new Map();
@@ -261,7 +260,6 @@
             return "#d63031";
         }
 
-        // NOVO: Ouvinte em tempo real da base de dados salva na nuvem
         onSnapshot(doc(db, "configuracao_sistema", "base_operacional"), (docSnap) => {
             if (docSnap.exists()) {
                 const dadosNuvem = docSnap.data();
@@ -278,7 +276,6 @@
         });
 
         function processarContagemErros() {
-            // Limpa contagem de erros anterior mantendo a lista de operadores carregada
             Object.keys(resumoOperadores).forEach(op => { resumoOperadores[op].erros = 0; });
             errosRegistrados.forEach(e => {
                 if (!resumoOperadores[e.op]) resumoOperadores[e.op] = { total: 0, erros: 0 };
@@ -403,10 +400,10 @@
 
         window.resetarPaginaBips = async () => { if(confirm("Limpar bips da nuvem?")) { (await getDocs(colErros)).forEach(async d => await deleteDoc(d.ref)); } };
 
-        // MODIFICADO: Agora grava diretamente na nuvem (Firestore) para refletir globalmente
+        // MODIFICADO: Agora além de subir a base, atualiza retroativamente os bips antigos já existentes na nuvem
         window.lerArquivo = (event) => {
             const reader = new FileReader();
-            document.getElementById('status-msg').innerHTML = "⏳ Processando base e enviando para nuvem...";
+            document.getElementById('status-msg').innerHTML = "⏳ Processando base e atualizando registros antigos...";
             reader.onload = async (e) => {
                 const lines = e.target.result.split(/\r?\n/);
                 const div = lines[0].includes(';') ? ';' : ',';
@@ -415,33 +412,54 @@
                 
                 const temporariaBase = [];
                 const temporarioResumo = {};
+                const mapaLocalParaLinkagem = new Map();
                 
                 for (let i = 1; i < lines.length; i++) {
                     const col = lines[i].split(div);
                     if (col[colT]) {
                         const track = col[colT].trim(), op = col[colO] ? col[colO].replace(/\[.*?\]/, '').trim() : "Desconhecido";
                         temporariaBase.push([track, op]);
+                        mapaLocalParaLinkagem.set(track, op);
                         if (!temporarioResumo[op]) temporarioResumo[op] = { total: 0, erros: 0 };
                         temporarioResumo[op].total++;
                     }
                 }
                 
                 try {
-                    // Envia a estrutura convertida para o Firebase global
+                    // 1. Envia a nova estrutura de dados mestre para o Firebase
                     await setDoc(doc(db, "configuracao_sistema", "base_operacional"), {
                         base: JSON.stringify(temporariaBase),
                         resumo: JSON.stringify(temporarioResumo)
                     });
-                    document.getElementById('status-msg').innerHTML = "✅ Base sincronizada globalmente na Nuvem!";
+
+                    // 2. BUSCA RETROATIVA AUTOMÁTICA: Procura erros antigos e corrige os nomes com base na nova lista
+                    document.getElementById('status-msg').innerHTML = "⚙️ Re-vinculando bips antigos aos novos operadores...";
+                    const snapshotBips = await getDocs(colErros);
+                    
+                    // Varre todos os erros existentes na nuvem
+                    for (const documentoBip of snapshotBips.docs) {
+                        const dadosDoBip = documentoBip.data();
+                        // Se o código desse bip antigo existir na nova planilha importada
+                        if (mapaLocalParaLinkagem.has(dadosDoBip.code)) {
+                            const novoNomeOperador = mapaLocalParaLinkagem.get(dadosDoBip.code);
+                            // Se o nome gravado antes for diferente do atual (ou se estava como não encontrado)
+                            if (dadosDoBip.op !== novoNomeOperador) {
+                                await updateDoc(doc(db, "erros_bipados", documentoBip.id), {
+                                    op: novoNomeOperador
+                                });
+                            }
+                        }
+                    }
+
+                    document.getElementById('status-msg').innerHTML = "✅ Base e histórico antigo re-sincronizados globalmente!";
                 } catch (erroEnvio) {
                     console.error(erroEnvio);
-                    document.getElementById('status-msg').innerHTML = "❌ Erro ao sincronizar com a Nuvem.";
+                    document.getElementById('status-msg').innerHTML = "❌ Erro ao processar re-vinculação na nuvem.";
                 }
             };
             reader.readAsText(event.target.files[0], "UTF-8");
         };
 
-        // MODIFICADO: Remove a base do Firestore
         window.resetarBaseLocal = async () => { 
             if(confirm("Deseja apagar a Base Operacional da Nuvem? Isso afetará todas as telas conectadas.")) { 
                 await deleteDoc(doc(db, "configuracao_sistema", "base_operacional"));
@@ -461,10 +479,8 @@
 
         window.limparTudo = async () => { 
             if(prompt("Senha Master:") === SENHA_LIDERANCA) { 
-                // Limpa erros
                 const bips = await getDocs(colErros);
                 bips.forEach(async d => await deleteDoc(d.ref)); 
-                // Limpa base
                 await deleteDoc(doc(db, "configuracao_sistema", "base_operacional"));
                 location.reload(); 
             } 
