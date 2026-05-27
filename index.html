@@ -3,60 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPX V10 - EXECUTIVE REPORT SYSTEM</title>
+    <title>Shopee Xpress - EXECUTIVE REPORT SYSTEM</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
         body { display: flex; height: 100vh; background-color: #f4f6f9; overflow: hidden; color: #2d3436; }
         
-        /* Lateral Executiva */
-        .sidebar { width: 240px; background-color: #1e272e; color: white; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
-        .sidebar h2 { padding: 22px 20px; text-align: center; background-color: #ee4d2d; color: white; font-size: 15px; letter-spacing: 0.8px; font-weight: 700; text-transform: uppercase; }
-        .menu-btn { padding: 15px 20px; border: none; background: none; color: #b2bec3; text-align: left; cursor: pointer; font-size: 13px; border-left: 4px solid transparent; transition: all 0.2s ease; display: flex; align-items: center; gap: 10px; }
-        .menu-btn:hover { background-color: #2c3e50; color: white; padding-left: 24px; }
-        .menu-btn.active { background-color: #2f3542; border-left: 4px solid #ee4d2d; color: white; font-weight: bold; }
-        #cloud-status { font-size: 11px; text-align: center; padding: 12px; color: #a4b0be; background-color: #141a1f; margin-top: auto; font-weight: 600; letter-spacing: 0.5px; }
+        /* Lateral Premium Shopee Xpress */
+        .sidebar { width: 250px; background-color: #181818; color: white; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: 2px 0 12px rgba(0,0,0,0.15); }
+        .sidebar-brand { padding: 30px 20px; text-align: left; font-size: 20px; font-weight: 800; italic: font-style; letter-spacing: -0.5px; border-bottom: 1px solid #2d2d2d; }
+        .sidebar-brand span { color: #ff5722; }
+        .sidebar-section-title { padding: 20px 20px 8px 20px; font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .menu-btn { padding: 14px 20px; border: none; background: none; color: #b2bec3; text-align: left; cursor: pointer; font-size: 13px; border-left: 4px solid transparent; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px; }
+        .menu-btn:hover { background-color: #242424; color: white; }
+        .menu-btn.active { background-color: #242424; border-left: 4px solid #ff5722; color: #ff5722; font-weight: bold; }
+        #cloud-status { font-size: 11px; text-align: center; padding: 12px; color: #a4b0be; background-color: #0f0f0f; margin-top: auto; font-weight: 600; letter-spacing: 0.5px; }
 
-        /* Área de Conteúdo Premium */
+        /* Área de Conteúdo */
         .content { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; background: #f8f9fa; }
         .page { display: none; width: 100%; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.25s ease-in-out; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Títulos e Header de Ação */
+        /* Headers de Ação */
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-        h1 { color: #2d3436; font-size: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .btn-print-report { background: #ee4d2d; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
-        .btn-print-report:hover { background: #d34122; transform: translateY(-1px); }
+        h1 { color: #2d3436; font-size: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-left: 4px solid #ff5722; padding-left: 10px; }
+        
+        /* Botões Estilizados */
+        .btn-print-report { background: #ff5722; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 2px 5px rgba(255,87,34,0.2); }
+        .btn-print-report:hover { background: #e04819; transform: translateY(-1px); }
+        .btn-utility { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn-utility:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .btn-danger { background: #d63031; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: calc(100% - 40px); font-size: 12px; font-weight: bold; margin: 0 20px 20px 20px; text-align: center; opacity: 0.8; transition: 0.2s; }
+        .btn-danger:hover { opacity: 1; }
 
-        /* Grid de Cards KPI Horizontal */
+        /* Grid de Cards KPI */
         .kpi-grid-horizontal { display: flex; gap: 20px; margin-bottom: 20px; width: 100%; }
         .kpi-card { flex: 1; background: white; padding: 18px 22px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 18px; border-left: 4px solid #dee2e6; }
-        .kpi-card.blue { border-left-color: #1e272e; }
-        .kpi-card.orange { border-left-color: #ee4d2d; }
+        .kpi-card.blue { border-left-color: #181818; }
+        .kpi-card.orange { border-left-color: #ff5722; }
         .kpi-card.green { border-left-color: #2ed573; }
         .kpi-icon { width: 40px; height: 40px; border-radius: 50%; background: #f1f2f6; display: flex; align-items: center; justify-content: center; font-size: 18px; }
         .kpi-info { display: flex; flex-direction: column; }
         .kpi-title { font-size: 11px; font-weight: 700; color: #8a99a8; text-transform: uppercase; letter-spacing: 0.5px; }
-        .kpi-value { font-size: 22px; font-weight: 700; color: #1e272e; }
+        .kpi-value { font-size: 22px; font-weight: 700; color: #181818; }
 
-        /* Layout Dividido ao meio */
+        /* Layout Dividido e Containers */
         .split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; align-items: start; margin-bottom: 20px; }
         @media (max-width: 900px) { .split-layout { grid-template-columns: 1fr; } }
-
-        /* Card de Destaque Master Inferior */
-        .total-consolidado-card { background: #1e272e; color: white; border-radius: 8px; padding: 18px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .report-container { background: white; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.02); overflow: hidden; }
+        .report-title-bar { background: #f8fafc; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .report-title-bar h3 { font-size: 12px; font-weight: 700; color: #181818; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 8px; }
+        
+        /* Card Consolidado Inferior */
+        .total-consolidado-card { background: #181818; color: white; border-radius: 8px; padding: 18px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .total-item { display: flex; align-items: center; gap: 15px; }
         .total-item-title { font-size: 11px; font-weight: 700; color: #a4b0be; text-transform: uppercase; letter-spacing: 0.8px; }
         .total-item-value { font-size: 20px; font-weight: 700; }
-        .total-item-value.highlight { color: #ee4d2d; }
+        .total-item-value.highlight { color: #ff5722; }
         .total-item-value.success { color: #2ed573; }
 
-        /* Containers de Relatório */
-        .report-container { background: white; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.02); overflow: hidden; }
-        .report-title-bar { background: #f8fafc; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .report-title-bar h3 { font-size: 12px; font-weight: 700; color: #1e272e; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 8px; }
-        
-        /* Tabelas Otimizadas */
+        /* Tabelas */
         .table-wrapper { padding: 0; max-height: 480px; overflow-y: auto; }
         .hist-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
         .hist-table th { background: #ffffff; color: #8a99a8; padding: 12px 14px; font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; border-bottom: 2px solid #edf2f7; position: sticky; top: 0; z-index: 10; }
@@ -68,39 +75,38 @@
         .progress-container { display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 100%; }
         .progress-bar-bg { flex: 1; max-width: 90px; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
         .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.4s ease; }
-        .progress-text { font-weight: 700; font-size: 12px; color: #1e272e; min-width: 42px; text-align: right; }
+        .progress-text { font-weight: 700; font-size: 12px; color: #181818; min-width: 42px; text-align: right; }
         
-        /* Cabeçalho de Data do Histórico */
-        .date-header-bar { background: #ee4d2d; color: white; padding: 14px 20px; font-weight: 700; font-size: 13px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; border-top-left-radius: 8px; border-top-right-radius: 8px; text-transform: uppercase; }
-
-        /* Badges e Ícones */
+        .date-header-bar { background: #ff5722; color: white; padding: 14px 20px; font-weight: 700; font-size: 13px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; border-top-left-radius: 8px; border-top-right-radius: 8px; text-transform: uppercase; }
         .bullet-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; }
         .badge-error { color: #d63031; font-weight: 700; }
         .badge-zero-error { color: #94a3b8; font-weight: 400; }
 
-        /* Controles */
-        .scan-input { width: 100%; padding: 18px; font-size: 24px; text-align: center; border: 2px solid #ee4d2d; border-radius: 8px; outline: none; }
-        .btn-utility { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; }
-        .btn-danger { background: #d63031; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: calc(100% - 40px); font-size: 12px; font-weight: bold; margin: 0 20px 20px 20px; text-align: center; }
+        /* Controles de Bip */
+        .scan-input { width: 100%; padding: 18px; font-size: 24px; text-align: center; border: 2px solid #ff5722; border-radius: 8px; outline: none; box-shadow: 0 4px 10px rgba(255,87,34,0.05); }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <h2>LOGISTIQUE V10</h2>
-        <button id="btn-receive" class="menu-btn active" onclick="showPage('receive', this)">📥 1. Importar Base</button>
+        <div class="sidebar-brand">Shopee<span>XPRESS</span></div>
+        
+        <div class="sidebar-section-title">Operação</div>
+        <button id="btn-receive" class="menu-btn active" onclick="showPage('receive', this)">📥 1. Importar Planilha</button>
         <button id="btn-bipar" class="menu-btn" onclick="showPage('bipar', this)">🔦 2. Erro de Etiquetagem</button>
-        <button id="btn-audit" class="menu-btn" onclick="showPage('audit', this)">📑 3. Performance 🔒</button>
+        
+        <div class="sidebar-section-title">Indicadores</div>
+        <button id="btn-audit" class="menu-btn" onclick="showPage('audit', this)">📊 3. Performance 🔒</button>
         <button id="btn-diario" class="menu-btn" onclick="showPage('diario', this)">📅 4. Histórico Diário 🔒</button>
         
         <div id="cloud-status">🔄 Conectando...</div>
-        <button class="btn-danger" onclick="limparTudo()">⚠️ LIMPAR TUDO</button>
+        <button class="btn-danger" onclick="limparTudo()">⚠️ LIMPAR NUVEM</button>
     </div>
 
     <div class="content">
         <div id="receive" class="page active">
             <h1>Importar Base Operacional</h1>
-            <div class="report-container" style="padding: 25px;">
+            <div class="report-container" style="padding: 25px; margin-top: 20px;">
                 <div style="display: flex; align-items: center; justify-content: space-between;">
                     <input type="file" id="csv-file" class="file-input" accept=".csv" onchange="lerArquivo(event)">
                     <button class="btn-utility" style="background: #7f8c8d; color: white;" onclick="resetarBaseLocal()">🔄 Resetar Base Local</button>
@@ -112,9 +118,12 @@
         <div id="bipar" class="page">
             <div class="page-header">
                 <h1>Erro de Etiquetagem</h1>
-                <button class="btn-utility" onclick="resetarPaginaBips()">🔄 Resetar Página</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-utility" style="background: #27ae60; color: white; border: none;" onclick="copiarCodigosBipados()">📋 Copiar Códigos</button>
+                    <button class="btn-utility" onclick="resetarPaginaBips()">🔄 Resetar Página</button>
+                </div>
             </div>
-            <div class="report-container" style="padding: 25px;">
+            <div class="report-container" style="padding: 25px; margin-bottom: 20px;">
                 <input type="text" id="scanner" class="scan-input" placeholder="Bipe o código de barras aqui..." onkeypress="processarBip(event)" autocomplete="off">
             </div>
             <div class="report-container table-wrapper">
@@ -228,7 +237,6 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        // Adicionado o updateDoc para fazer as correções em massa retroativas
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -249,7 +257,7 @@
         let resumoOperadores = {};
         let errosRegistrados = [];
         let paginaAtiva = 'receive';
-        const listaCoresBolinhas = ['#ee4d2d', '#9b59b6', '#3498db', '#f1c40f', '#1abc9c', '#e67e22', '#2ecc71', '#34495e'];
+        const listaCoresBolinhas = ['#ff5722', '#9b59b6', '#3498db', '#f1c40f', '#1abc9c', '#e67e22', '#2ecc71', '#34495e'];
 
         function obterCorEscalaCalor(porcentagem) {
             const p = parseFloat(porcentagem);
@@ -302,6 +310,20 @@
                     await addDoc(colErros, { op, code, data: new Date().toLocaleDateString('pt-BR'), hora: new Date().toLocaleTimeString('pt-BR'), timestamp: Date.now() });
                 } catch (err) { console.error(err); }
             }
+        }
+
+        // NOVO: Função para copiar todos os códigos gerados para a área de transferência
+        window.copiarCodigosBipados = function() {
+            if (errosRegistrados.length === 0) {
+                alert("Nenhum código registrado para copiar.");
+                return;
+            }
+            const listaCodigos = errosRegistrados.map(e => e.code).join('\n');
+            navigator.clipboard.writeText(listaCodigos).then(() => {
+                alert("Todos os códigos BR foram copiados com sucesso!");
+            }).catch(err => {
+                console.error("Erro ao copiar", err);
+            });
         }
 
         window.renderizarPerformance = function() {
@@ -393,14 +415,13 @@
         }
 
         window.renderizarBipsRecentes = function() {
-            document.querySelector('#tabela-recente tbody').innerHTML = errosRegistrados.slice(0, 50).map(e => `<tr><td>${e.hora}</td><td style="font-family:monospace; font-weight:600;">${e.code}</td><td><button class="btn-utility" style="color:#e74c3c; border:none;" onclick="deletarBipIndividual('${e.id_nuvem}')">🗑️</button></td></tr>`).join('');
+            document.querySelector('#tabela-recente tbody').innerHTML = errosRegistrados.slice(0, 50).map(e => `<tr><td>${e.hora}</td><td style="font-family:monospace; font-weight:600;">${e.code}</td><td><button class="btn-utility" style="color:#e74c3c; border:none; padding:4px 8px;" onclick="deletarBipIndividual('${e.id_nuvem}')">🗑️</button></td></tr>`).join('');
         }
 
         window.deletarBipIndividual = async (id) => { if(confirm("Remover?")) await deleteDoc(doc(db, "erros_bipados", id)); };
 
         window.resetarPaginaBips = async () => { if(confirm("Limpar bips da nuvem?")) { (await getDocs(colErros)).forEach(async d => await deleteDoc(d.ref)); } };
 
-        // MODIFICADO: Agora além de subir a base, atualiza retroativamente os bips antigos já existentes na nuvem
         window.lerArquivo = (event) => {
             const reader = new FileReader();
             document.getElementById('status-msg').innerHTML = "⏳ Processando base e atualizando registros antigos...";
@@ -426,23 +447,18 @@
                 }
                 
                 try {
-                    // 1. Envia a nova estrutura de dados mestre para o Firebase
                     await setDoc(doc(db, "configuracao_sistema", "base_operacional"), {
                         base: JSON.stringify(temporariaBase),
                         resumo: JSON.stringify(temporarioResumo)
                     });
 
-                    // 2. BUSCA RETROATIVA AUTOMÁTICA: Procura erros antigos e corrige os nomes com base na nova lista
                     document.getElementById('status-msg').innerHTML = "⚙️ Re-vinculando bips antigos aos novos operadores...";
                     const snapshotBips = await getDocs(colErros);
                     
-                    // Varre todos os erros existentes na nuvem
                     for (const documentoBip of snapshotBips.docs) {
                         const dadosDoBip = documentoBip.data();
-                        // Se o código desse bip antigo existir na nova planilha importada
                         if (mapaLocalParaLinkagem.has(dadosDoBip.code)) {
                             const novoNomeOperador = mapaLocalParaLinkagem.get(dadosDoBip.code);
-                            // Se o nome gravado antes for diferente do atual (ou se estava como não encontrado)
                             if (dadosDoBip.op !== novoNomeOperador) {
                                 await updateDoc(doc(db, "erros_bipados", documentoBip.id), {
                                     op: novoNomeOperador
