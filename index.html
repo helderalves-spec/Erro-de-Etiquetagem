@@ -237,7 +237,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD4-kttLAn-QvxF7LIX-BMtTfCcz5HLnuk",
@@ -268,20 +268,23 @@
             return "#d63031";
         }
 
-        onSnapshot(doc(db, "configuracao_sistema", "base_operacional"), (docSnap) => {
-            if (docSnap.exists()) {
-                const dadosNuvem = docSnap.data();
-                baseDeDados = new Map(JSON.parse(dadosNuvem.base || "[]"));
-                resumoOperadores = JSON.parse(dadosNuvem.resumo || "{}");
-                document.getElementById('status-msg').innerHTML = "🟢 Base Operacional carregada via Nuvem.";
-            } else {
-                baseDeDados.clear();
-                resumoOperadores = {};
-                document.getElementById('status-msg').innerHTML = "⚠️ Nenhuma Base Operacional ativa na nuvem. Importe um CSV.";
+        // Recupera a planilha salva localmente para evitar estourar o limite de 1MB do Firestore
+        function carregarBaseLocal() {
+            try {
+                const baseSalva = localStorage.getItem("spx_local_base");
+                const resumoSalvo = localStorage.getItem("spx_local_resumo");
+                if (baseSalva && resumoSalvo) {
+                    baseDeDados = new Map(JSON.parse(baseSalva));
+                    resumoOperadores = JSON.parse(resumoSalvo);
+                    document.getElementById('status-msg').innerHTML = `🟢 Base Operacional ativa na memória (${baseDeDados.size} pacotes).`;
+                } else {
+                    document.getElementById('status-msg').innerHTML = "⚠️ Nenhuma Base Operacional ativa. Importe um arquivo CSV.";
+                }
+            } catch(e) {
+                console.error("Erro ao ler localStorage", e);
             }
-            processarContagemErros();
-            if (paginaAtiva === 'audit') renderizarPerformance();
-        });
+        }
+        carregarBaseLocal();
 
         function processarContagemErros() {
             Object.keys(resumoOperadores).forEach(op => { resumoOperadores[op].erros = 0; });
@@ -421,15 +424,14 @@
 
         window.resetarPaginaBips = async () => { if(confirm("Limpar bips da nuvem?")) { (await getDocs(colErros)).forEach(async d => await deleteDoc(d.ref)); } };
 
-        // CORREÇÃO CRÍTICA AQUI: Processamento por varredura de strings de alta performance (+20 mil linhas)
+        // NOVO CORRETOR LINEAR DE ALTO DESEMPENHO - SALVA LOCALMENTE SEM LIMITES DO FIREBASE
         window.lerArquivo = (event) => {
             const reader = new FileReader();
             document.getElementById('status-msg').innerHTML = "⏳ Processando base de dados gigante... Aguarde.";
             
-            reader.onload = async (e) => {
+            reader.onload = function(e) {
                 const textoCompleto = e.target.result;
                 
-                // Localiza dinamicamente a primeira quebra para identificar o delimitador do cabeçalho
                 const primeiraQuebra = textoCompleto.indexOf('\n');
                 if (primeiraQuebra === -1) return;
                 const cabecalhoLinha = textoCompleto.substring(0, primeiraQuebra);
@@ -444,14 +446,13 @@
                     return;
                 }
 
-                const temporariaBase = [];
-                const temporarioResumo = {};
-                const mapaLocalParaLinkagem = new Map();
+                baseDeDados.clear();
+                resumoOperadores = {};
                 
                 let cursorIndex = primeiraQuebra + 1;
                 let finalTexto = textoCompleto.length;
 
-                // Loop linear de alta velocidade caractere por caractere (Evita o estouro de memória do .split)
+                // Processamento linear caractere por caractere (Evita estouro de memória RAM)
                 while (cursorIndex < finalTexto) {
                     let proximaQuebra = textoCompleto.indexOf('\n', cursorIndex);
                     if (proximaQuebra === -1) proximaQuebra = finalTexto;
@@ -466,49 +467,41 @@
                         let track = col[colT].trim();
                         let op = col[colO] ? col[colO].replace(/\[.*?\]/, '').trim() : "Desconhecido";
                         
-                        temporariaBase.push([track, op]);
-                        mapaLocalParaLinkagem.set(track, op);
+                        baseDeDados.set(track, op);
                         
-                        if (!temporarioResumo[op]) {
-                            temporarioResumo[op] = { total: 0, erros: 0 };
+                        if (!resumoOperadores[op]) {
+                            resumoOperadores[op] = { total: 0, erros: 0 };
                         }
-                        temporarioResumo[op].total++;
+                        resumoOperadores[op].total++;
                     }
                 }
                 
                 try {
-                    await setDoc(doc(db, "configuracao_sistema", "base_operacional"), {
-                        base: JSON.stringify(temporariaBase),
-                        resumo: JSON.stringify(temporarioResumo)
-                    });
+                    // Armazena no LocalStorage para contornar o limite do documento do Firebase
+                    localStorage.setItem("spx_local_base", JSON.stringify(Array.from(baseDeDados.entries())));
+                    localStorage.setItem("spx_local_resumo", JSON.stringify(resumoOperadores));
 
-                    document.getElementById('status-msg').innerHTML = "⚙️ Re-vinculando bips antigos aos novos operadores...";
-                    const snapshotBips = await getDocs(colErros);
-                    
-                    for (const documentoBip of snapshotBips.docs) {
-                        const dadosDoBip = documentoBip.data();
-                        if (mapaLocalParaLinkagem.has(dadosDoBip.code)) {
-                            const novoNomeOperador = mapaLocalParaLinkagem.get(dadosDoBip.code);
-                            if (dadosDoBip.op !== novoNomeOperador) {
-                                await updateDoc(doc(db, "erros_bipados", documentoBip.id), {
-                                    op: novoNomeOperador
-                                });
-                            }
-                        }
-                    }
-
-                    document.getElementById('status-msg').innerHTML = "✅ Base e histórico antigo re-sincronizados globalmente!";
-                } catch (erroEnvio) {
-                    console.error(erroEnvio);
-                    document.getElementById('status-msg').innerHTML = "❌ Erro ao processar re-vinculação na nuvem.";
+                    document.getElementById('status-msg').innerHTML = `✅ Planilha de ${baseDeDados.size} linhas carregada com sucesso!`;
+                    processarContagemErros();
+                    if (paginaAtiva === 'audit') renderizarPerformance();
+                } catch (erroStorage) {
+                    console.error(erroStorage);
+                    document.getElementById('status-msg').innerHTML = "❌ Erro ao salvar dados no navegador. Arquivo excessivamente grande.";
                 }
             };
             reader.readAsText(event.target.files[0], "UTF-8");
         };
 
         window.resetarBaseLocal = async () => { 
-            if(confirm("Deseja apagar a Base Operacional da Nuvem? Isso afetará todas as telas conectadas.")) { 
-                await deleteDoc(doc(db, "configuracao_sistema", "base_operacional"));
+            if(confirm("Deseja apagar a Base Operacional salva neste computador?")) { 
+                localStorage.removeItem("spx_local_base");
+                localStorage.removeItem("spx_local_resumo");
+                baseDeDados.clear();
+                resumoOperadores = {};
+                document.getElementById('csv-file').value = "";
+                document.getElementById('status-msg').innerHTML = "⚠️ Base local removida.";
+                processarContagemErros();
+                if (paginaAtiva === 'audit') renderizarPerformance();
             } 
         };
 
@@ -527,7 +520,8 @@
             if(prompt("Senha Master:") === SENHA_LIDERANCA) { 
                 const bips = await getDocs(colErros);
                 bips.forEach(async d => await deleteDoc(d.ref)); 
-                await deleteDoc(doc(db, "configuracao_sistema", "base_operacional"));
+                localStorage.removeItem("spx_local_base");
+                localStorage.removeItem("spx_local_resumo");
                 location.reload(); 
             } 
         };
