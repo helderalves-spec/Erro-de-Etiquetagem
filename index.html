@@ -3,133 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopee Xpress - EXECUTIVE REPORT SYSTEM</title>
+    <title>SPX V10 - ONLINE CLOUD</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
-        body { display: flex; height: 100vh; background-color: #f4f6f9; overflow: hidden; color: #2d3436; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { display: flex; height: 100vh; background-color: #f0f2f5; overflow: hidden; }
         
-        /* Lateral Premium Shopee Xpress */
-        .sidebar { width: 250px; background-color: #181818; color: white; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: 2px 0 12px rgba(0,0,0,0.15); }
-        .sidebar-brand { padding: 30px 20px; text-align: left; font-size: 20px; font-weight: 800; italic: font-style; letter-spacing: -0.5px; border-bottom: 1px solid #2d2d2d; }
-        .sidebar-brand span { color: #ff5722; }
-        .sidebar-section-title { padding: 20px 20px 8px 20px; font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .menu-btn { padding: 14px 20px; border: none; background: none; color: #b2bec3; text-align: left; cursor: pointer; font-size: 13px; border-left: 4px solid transparent; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px; }
-        .menu-btn:hover { background-color: #242424; color: white; }
-        .menu-btn.active { background-color: #242424; border-left: 4px solid #ff5722; color: #ff5722; font-weight: bold; }
-        #cloud-status { font-size: 11px; text-align: center; padding: 12px; color: #a4b0be; background-color: #0f0f0f; margin-top: auto; font-weight: 600; letter-spacing: 0.5px; }
+        /* Lateral */
+        .sidebar { width: 230px; background-color: #1e272e; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar h2 { padding: 20px; text-align: center; background-color: #ee4d2d; color: white; font-size: 16px; letter-spacing: 0.5px; }
+        .menu-btn { padding: 14px 20px; border: none; background: none; color: #d2dae2; text-align: left; cursor: pointer; font-size: 13px; border-left: 4px solid transparent; transition: 0.2s; }
+        .menu-btn:hover { background-color: #2c3e50; color: white; }
+        .menu-btn.active { background-color: #2f3542; border-left: 4px solid #ee4d2d; color: white; font-weight: bold; }
+        #cloud-status { font-size: 11px; text-align: center; padding: 10px; color: #a4b0be; background-color: #141a1f; margin-top: auto; font-weight: 600; }
 
         /* Área de Conteúdo */
-        .content { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; background: #f8f9fa; }
-        .page { display: none; width: 100%; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.25s ease-in-out; }
+        .content { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
+        .page { display: none; width: 100%; max-width: 850px; animation: fadeIn 0.2s ease-in-out; }
         .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Headers de Ação */
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-        h1 { color: #2d3436; font-size: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-left: 4px solid #ff5722; padding-left: 10px; }
+        /* Elementos de Interface */
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; width: 100%; }
+        h1 { margin-bottom: 20px; color: #2d3436; font-size: 20px; border-left: 5px solid #ee4d2d; padding-left: 12px; }
         
-        /* Botões Estilizados */
-        .btn-print-report { background: #ff5722; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 2px 5px rgba(255,87,34,0.2); }
-        .btn-print-report:hover { background: #e04819; transform: translateY(-1px); }
-        .btn-utility { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-        .btn-utility:hover { background: #f1f5f9; border-color: #94a3b8; }
-        .btn-danger { background: #d63031; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: calc(100% - 40px); font-size: 12px; font-weight: bold; margin: 0 20px 20px 20px; text-align: center; opacity: 0.8; transition: 0.2s; }
-        .btn-danger:hover { opacity: 1; }
+        /* Painel Superior de Ações */
+        .action-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .action-group { display: flex; gap: 8px; }
 
-        /* Grid de Cards KPI */
-        .kpi-grid-horizontal { display: flex; gap: 20px; margin-bottom: 20px; width: 100%; }
-        .kpi-card { flex: 1; background: white; padding: 18px 22px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 18px; border-left: 4px solid #dee2e6; }
-        .kpi-card.blue { border-left-color: #181818; }
-        .kpi-card.orange { border-left-color: #ff5722; }
-        .kpi-card.green { border-left-color: #2ed573; }
-        .kpi-icon { width: 40px; height: 40px; border-radius: 50%; background: #f1f2f6; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .kpi-info { display: flex; flex-direction: column; }
-        .kpi-title { font-size: 11px; font-weight: 700; color: #8a99a8; text-transform: uppercase; letter-spacing: 0.5px; }
-        .kpi-value { font-size: 22px; font-weight: 700; color: #181818; }
-
-        /* Layout Dividido e Containers */
-        .split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; align-items: start; margin-bottom: 20px; }
-        @media (max-width: 900px) { .split-layout { grid-template-columns: 1fr; } }
-        .report-container { background: white; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.02); overflow: hidden; }
-        .report-title-bar { background: #f8fafc; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .report-title-bar h3 { font-size: 12px; font-weight: 700; color: #181818; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 8px; }
-        
-        /* Card Consolidado Inferior */
-        .total-consolidado-card { background: #181818; color: white; border-radius: 8px; padding: 18px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .total-item { display: flex; align-items: center; gap: 15px; }
-        .total-item-title { font-size: 11px; font-weight: 700; color: #a4b0be; text-transform: uppercase; letter-spacing: 0.8px; }
-        .total-item-value { font-size: 20px; font-weight: 700; }
-        .total-item-value.highlight { color: #ff5722; }
-        .total-item-value.success { color: #2ed573; }
-
-        /* Tabelas */
-        .table-wrapper { padding: 0; max-height: 480px; overflow-y: auto; }
+        /* Tabelas Dinâmicas */
+        .table-wrapper { padding: 0; max-height: 430px; overflow-y: auto; border: 1px solid #dfe6e9; border-radius: 6px; }
         .hist-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
-        .hist-table th { background: #ffffff; color: #8a99a8; padding: 12px 14px; font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; border-bottom: 2px solid #edf2f7; position: sticky; top: 0; z-index: 10; }
-        .hist-table td { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; color: #2d3436; vertical-align: middle; }
-        .hist-table tr:hover { background-color: #fbfbfc; }
-        .col-left { text-align: left !important; padding-left: 20px !important; }
-
-        /* Barras de Progresso */
-        .progress-container { display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 100%; }
-        .progress-bar-bg { flex: 1; max-width: 90px; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.4s ease; }
-        .progress-text { font-weight: 700; font-size: 12px; color: #181818; min-width: 42px; text-align: right; }
+        .hist-table thead { position: sticky; top: 0; background: #2d3436; z-index: 2; }
+        .hist-table th { color: white; padding: 12px 10px; font-size: 11px; text-transform: uppercase; font-weight: 600; }
+        .hist-table td { padding: 10px; border-bottom: 1px solid #dfe6e9; color: #2d3436; vertical-align: middle; }
+        .hist-table tbody tr:last-child td { border-bottom: none; }
+        .hist-table tr:nth-child(even) { background-color: #f8f9fa; }
         
-        .date-header-bar { background: #ff5722; color: white; padding: 14px 20px; font-weight: 700; font-size: 13px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; border-top-left-radius: 8px; border-top-right-radius: 8px; text-transform: uppercase; }
-        .bullet-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; }
-        .badge-error { color: #d63031; font-weight: 700; }
-        .badge-zero-error { color: #94a3b8; font-weight: 400; }
+        /* Linha de Totais Fixos */
+        .total-row { background-color: #dfe6e9 !important; font-weight: bold; position: sticky; bottom: 0; z-index: 2; box-shadow: 0 -2px 5px rgba(0,0,0,0.05); }
+        .total-row td { border-top: 2px solid #b2bec3; border-bottom: none !important; color: #2d3436 !important; }
 
-        /* Controles de Bip */
-        .scan-input { width: 100%; padding: 18px; font-size: 24px; text-align: center; border: 2px solid #ff5722; border-radius: 8px; outline: none; box-shadow: 0 4px 10px rgba(255,87,34,0.05); }
+        /* Status e Badges */
+        .date-header { background: #ee4d2d !important; color: white !important; text-align: left !important; font-size: 14px !important; padding: 12px !important; font-weight: bold; }
+        .badge-error { color: #d63031; font-weight: 800; font-size: 14px; }
+        .badge-success { color: #2ed573; font-weight: bold; }
+        .badge-warning { color: #ffa502; font-weight: bold; }
+        
+        /* Inputs e Botões */
+        .scan-input { width: 100%; padding: 18px; font-size: 24px; text-align: center; border: 2px solid #ee4d2d; border-radius: 8px; outline: none; box-shadow: 0 4px 10px rgba(238, 77, 45, 0.1); transition: 0.2s; }
+        .scan-input:focus { box-shadow: 0 4px 15px rgba(238, 77, 45, 0.25); }
+        .file-input { font-size: 14px; padding: 10px 0; }
+        
+        /* Botões de Ação */
+        .btn-utility { background: #2f3542; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
+        .btn-utility:hover { background: #57606f; }
+        .btn-clear-local { background: #7f8c8d; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 10px; transition: 0.2s; }
+        .btn-clear-local:hover { background: #95a5a6; }
+        .btn-danger { background: #d63031; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: calc(100% - 40px); font-size: 12px; font-weight: bold; margin: 0 20px 20px 20px; transition: 0.2s; text-align: center; }
+        .btn-danger:hover { background: #b32424; }
+        
+        /* Botão de excluir item único */
+        .btn-delete-item { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 14px; padding: 2px 8px; transition: 0.2s; }
+        .btn-delete-item:hover { color: #c0392b; transform: scale(1.15); }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="sidebar-brand">Shopee<span>XPRESS</span></div>
-        
-        <div class="sidebar-section-title">Operação</div>
-        <button id="btn-receive" class="menu-btn active" onclick="showPage('receive', this)">📥 1. Importar Planilha</button>
+        <h2>LOGISTIQUE V10</h2>
+        <button id="btn-receive" class="menu-btn active" onclick="showPage('receive', this)">📥 1. Importar Base</button>
         <button id="btn-bipar" class="menu-btn" onclick="showPage('bipar', this)">🔦 2. Erro de Etiquetagem</button>
-        
-        <div class="sidebar-section-title">Indicadores</div>
-        <button id="btn-audit" class="menu-btn" onclick="showPage('audit', this)">📊 3. Performance 🔒</button>
+        <button id="btn-audit" class="menu-btn" onclick="showPage('audit', this)">📑 3. Performance 🔒</button>
         <button id="btn-diario" class="menu-btn" onclick="showPage('diario', this)">📅 4. Histórico Diário 🔒</button>
         
-        <div id="cloud-status">🔄 Conectando...</div>
-        <button class="btn-danger" onclick="limparTudo()">⚠️ LIMPAR NUVEM</button>
+        <div id="cloud-status">🔄 Conectando ao Cloud...</div>
+        <button class="btn-danger" onclick="limparTudo()">⚠️ LIMPAR TUDO</button>
     </div>
 
     <div class="content">
         <div id="receive" class="page active">
             <h1>Importar Base Operacional</h1>
-            <div class="report-container" style="padding: 25px; margin-top: 20px;">
+            <div class="card">
                 <div style="display: flex; align-items: center; justify-content: space-between;">
                     <input type="file" id="csv-file" class="file-input" accept=".csv" onchange="lerArquivo(event)">
-                    <button class="btn-utility" style="background: #7f8c8d; color: white;" onclick="resetarBaseLocal()">🔄 Resetar Base Local</button>
+                    <button class="btn-clear-local" onclick="resetarBaseLocal()">🔄 Resetar Base Local</button>
                 </div>
                 <div id="status-msg" style="margin-top: 15px; font-weight: 600;"></div>
             </div>
         </div>
 
         <div id="bipar" class="page">
-            <div class="page-header">
+            <div class="action-header">
                 <h1>Erro de Etiquetagem</h1>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn-utility" style="background: #27ae60; color: white; border: none;" onclick="copiarCodigosBipados()">📋 Copiar Códigos</button>
-                    <button class="btn-utility" onclick="resetarPaginaBips()">🔄 Resetar Página</button>
+                <div class="action-group">
+                    <button class="btn-utility" style="padding: 8px 15px; background-color: #7f8c8d;" onclick="resetarPaginaBips()">🔄 Resetar Página</button>
                 </div>
             </div>
-            <div class="report-container" style="padding: 25px; margin-bottom: 20px;">
+            <div class="card">
                 <input type="text" id="scanner" class="scan-input" placeholder="Bipe o código de barras aqui..." onkeypress="processarBip(event)" autocomplete="off">
             </div>
-            <div class="report-container table-wrapper">
+            <div class="card table-wrapper">
                 <table class="hist-table" id="tabela-recente">
                     <thead>
-                        <tr><th style="width: 25%;">Hora</th><th style="width: 60%;">Código (BR)</th><th style="width: 15%;">Ações</th></tr>
+                        <tr>
+                            <th style="width: 25%;">Hora</th>
+                            <th style="width: 60%;">Código (BR)</th>
+                            <th style="width: 15%;">Ações</th>
+                        </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -137,107 +117,33 @@
         </div>
 
         <div id="audit" class="page">
-            <div class="page-header">
-                <h1>Matriz Digital de Performance Operacional</h1>
-                <div style="display:flex; gap:8px;">
-                    <button class="btn-print-report" onclick="window.print()">📥 Imprimir Report</button>
+            <div class="action-header">
+                <h1>Performance de Acuracidade (Restrito)</h1>
+                <div class="action-group">
+                    <button class="btn-utility" style="padding: 8px 15px;" onclick="copiarPerformanceGeral()">📋 Copiar Tabela</button>
+                    <button class="btn-utility" style="padding: 8px 15px;" onclick="exportarPerformanceCSV()">📥 Exportar CSV</button>
                 </div>
             </div>
-            
-            <div class="kpi-grid-horizontal">
-                <div class="kpi-card blue">
-                    <div class="kpi-icon">📦</div>
-                    <div class="kpi-info"><div class="kpi-title">Volume Total Validado</div><div class="kpi-value" id="kpi-total-validado">0</div></div>
-                </div>
-                <div class="kpi-card orange">
-                    <div class="kpi-icon">⚠️</div>
-                    <div class="kpi-info"><div class="kpi-title">Total de Desvios Detectados</div><div class="kpi-value" id="kpi-total-erros">0</div></div>
-                </div>
-                <div class="kpi-card green">
-                    <div class="kpi-icon">📈</div>
-                    <div class="kpi-info"><div class="kpi-title">Acuracidade Geral da Planta</div><div class="kpi-value" id="kpi-acuracidade-geral">100%</div></div>
-                </div>
-            </div>
-
-            <div class="split-layout">
-                <div class="report-container">
-                    <div class="report-title-bar"><h3>📊 Distribuição de Performance - Parte A</h3></div>
-                    <div class="table-wrapper">
-                        <table class="hist-table" id="tabela-perf-esquerda">
-                            <thead>
-                                <tr><th class="col-left">Operador</th><th>Validados</th><th>Erros</th><th>Acuracidade</th></tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="report-container">
-                    <div class="report-title-bar"><h3>📊 Distribuição de Performance - Parte B</h3></div>
-                    <div class="table-wrapper">
-                        <table class="hist-table" id="tabela-perf-direita">
-                            <thead>
-                                <tr><th class="col-left">Operador</th><th>Validados</th><th>Erros</th><th>Acuracidade</th></tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="total-consolidado-card">
-                <div class="total-item">
-                    <div style="font-size:22px;">📊</div>
-                    <div>
-                        <div class="total-item-title">Status Global</div>
-                        <div class="total-item-value" style="color: #cbd5e1;">TOTAL CONSOLIDADO</div>
-                    </div>
-                </div>
-                <div class="total-item">
-                    <div>
-                        <div class="total-item-title">Volume Total</div>
-                        <div class="total-item-value" id="card-master-validado">0</div>
-                    </div>
-                </div>
-                <div class="total-item">
-                    <div>
-                        <div class="total-item-title">Desvios Mapeados</div>
-                        <div class="total-item-value highlight" id="card-master-erros">0</div>
-                    </div>
-                </div>
-                <div class="total-item">
-                    <div>
-                        <div class="total-item-title">Acuracidade Média</div>
-                        <div class="total-item-value success" id="card-master-acuracidade">100%</div>
-                    </div>
-                </div>
+            <div class="card table-wrapper" style="max-height: 550px;">
+                <table class="hist-table" id="tabela-perf">
+                    <thead>
+                        <tr><th style="text-align: left; padding-left: 20px;">Operador</th><th>Total Validado</th><th>Total Erros</th><th>Acuracidade %</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot></tfoot>
+                </table>
             </div>
         </div>
 
         <div id="diario" class="page">
-            <div class="page-header">
-                <h1>Relatório de Distribuição de Impacto Diário</h1>
-                <button class="btn-print-report" onclick="window.print()">📥 Imprimir Report</button>
-            </div>
-
-            <div class="kpi-grid-horizontal">
-                <div class="kpi-card orange">
-                    <div class="kpi-icon">🚨</div>
-                    <div class="kpi-info"><div class="kpi-title">Total Geral de Erros</div><div class="kpi-value" id="kpi-hist-erros">0</div></div>
-                </div>
-                <div class="kpi-card blue">
-                    <div class="kpi-icon">👥</div>
-                    <div class="kpi-info"><div class="kpi-title">Operadores Mapeados (Erros)</div><div class="kpi-value" id="kpi-hist-operadores-erro">0</div></div>
-                </div>
-            </div>
-
-            <div id="container-historico" style="max-height: calc(100vh - 260px); overflow-y: auto;"></div>
+            <h1>Relatório Quantitativo Diário (Restrito)</h1>
+            <div id="container-historico"></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD4-kttLAn-QvxF7LIX-BMtTfCcz5HLnuk",
@@ -245,262 +151,495 @@
             projectId: "erro-de-etiquetagem",
             storageBucket: "erro-de-etiquetagem.firebasestorage.app",
             messagingSenderId: "924044206334",
-            appId: "1:924044206334:web:b1faf5bc9c94eb04c305af"
+            appId: "1:924044206334:web:b1faf5bc9c94eb04c305af",
+            measurementId: "G-3H9WW9SWCJ"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const colErros = collection(db, "erros_bipados");
+
         const SENHA_LIDERANCA = "admin2846";
 
-        let baseDeDados = new Map();
-        let resumoOperadores = {};
+        // Carrega dados aplicando otimização de mapeamento numérico para economizar localStorage
+        let baseDeDados = new Map(JSON.parse(localStorage.getItem('spx_base')) || []);
+        let resumoOperadores = JSON.parse(localStorage.getItem('spx_resumo')) || {};
+        let listaOperadoresInvertida = JSON.parse(localStorage.getItem('spx_op_list')) || [];
         let errosRegistrados = [];
         let paginaAtiva = 'receive';
-        const listaCoresBolinhas = ['#ff5722', '#9b59b6', '#3498db', '#f1c40f', '#1abc9c', '#e67e22', '#2ecc71', '#34495e'];
 
-        function obterCorEscalaCalor(porcentagem) {
-            const p = parseFloat(porcentagem);
-            if (isNaN(p) || p <= 0) return "#2ed573";
-            if (p < 5) return "#2ed573";
-            if (p < 15) return "#ffa502";
-            if (p < 25) return "#ff7f50";
-            return "#d63031";
+        if (baseDeDados.size > 0) {
+            document.getElementById('status-msg').innerHTML = `<span style="color: #27ae60;">✔ Base ativa em memória: ${baseDeDados.size} pacotes carregados.</span>`;
         }
 
-        onSnapshot(doc(db, "configuracao_sistema", "base_operacional"), (docSnap) => {
-            if (docSnap.exists()) {
-                const dadosNuvem = docSnap.data();
-                baseDeDados = new Map(JSON.parse(dadosNuvem.base || "[]"));
-                resumoOperadores = JSON.parse(dadosNuvem.resumo || "{}");
-                document.getElementById('status-msg').innerHTML = "🟢 Base Operacional carregada via Nuvem.";
-            } else {
-                baseDeDados.clear();
-                resumoOperadores = {};
-                document.getElementById('status-msg').innerHTML = "⚠️ Nenhuma Base Operacional ativa na nuvem. Importe um CSV.";
+        function obterNomeOperador(valor) {
+            if (typeof valor === 'number') {
+                return listaOperadoresInvertida[valor] || "Desconhecido";
             }
-            processarContagemErros();
-            if (paginaAtiva === 'audit') renderizarPerformance();
-        });
+            return valor;
+        }
 
         function processarContagemErros() {
-            Object.keys(resumoOperadores).forEach(op => { resumoOperadores[op].erros = 0; });
+            const resumoSalvo = JSON.parse(localStorage.getItem('spx_resumo')) || {};
+            
+            Object.keys(resumoSalvo).forEach(op => {
+                if (!resumoOperadores[op]) {
+                    resumoOperadores[op] = { total: resumoSalvo[op].total, erros: 0 };
+                } else {
+                    resumoOperadores[op].total = resumoSalvo[op].total;
+                    resumoOperadores[op].erros = 0;
+                }
+            });
+
+            Object.keys(resumoOperadores).forEach(op => {
+                resumoOperadores[op].erros = 0;
+            });
+
             errosRegistrados.forEach(e => {
-                if (!resumoOperadores[e.op]) resumoOperadores[e.op] = { total: 0, erros: 0 };
-                resumoOperadores[e.op].erros++;
+                let nomeOp = obterNomeOperador(e.op);
+                if (!resumoOperadores[nomeOp]) {
+                    resumoOperadores[nomeOp] = { total: 0, erros: 0 };
+                }
+                resumoOperadores[nomeOp].erros++;
             });
         }
 
         onSnapshot(query(colErros, orderBy("timestamp", "desc")), (snapshot) => {
             errosRegistrados = [];
-            snapshot.forEach((doc) => { errosRegistrados.push({ id_nuvem: doc.id, ...doc.data() }); });
+            snapshot.forEach((documento) => {
+                errosRegistrados.push({ id_nuvem: documento.id, ...documento.data() });
+            });
+            
             processarContagemErros();
-            document.getElementById('cloud-status').innerHTML = "🟢 ONLINE";
+            document.getElementById('cloud-status').innerHTML = "🟢 CLOUD ONLINE SYNCED";
+            
+            if (paginaAtiva === 'bipar') renderizarBipsRecentes();
             if (paginaAtiva === 'audit') renderizarPerformance();
             if (paginaAtiva === 'diario') renderizarHistoricoDiario();
-            if (paginaAtiva === 'bipar') renderizarBipsRecentes();
+        }, (error) => {
+            console.error("Falha na sincronização cloud: ", error);
+            document.getElementById('cloud-status').innerHTML = "🔴 ERRO DE CONEXÃO CLOUD";
         });
 
         window.processarBip = async function(e) {
             if (e.key === "Enter") {
                 const code = e.target.value.trim();
-                e.target.value = ""; if (!code) return;
-                const op = baseDeDados.get(code) || "Não Encontrado na Base";
+                e.target.value = ""; 
+                
+                if (!code) return;
+
+                let opRaw = baseDeDados.get(code);
+                const op = opRaw !== undefined ? obterNomeOperador(opRaw) : "Não Encontrado na Base";
+                const data = new Date().toLocaleDateString('pt-BR');
+                const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
                 try {
-                    await addDoc(colErros, { op, code, data: new Date().toLocaleDateString('pt-BR'), hora: new Date().toLocaleTimeString('pt-BR'), timestamp: Date.now() });
-                } catch (err) { console.error(err); }
+                    await addDoc(colErros, {
+                        op,
+                        code,
+                        data,
+                        hora,
+                        timestamp: Date.now()
+                    });
+                } catch (err) {
+                    alert("Erro crítico ao salvar no Cloud. Verifique sua conexão.");
+                    console.error(err);
+                }
             }
         }
 
-        // NOVO: Função para copiar todos os códigos gerados para a área de transferência
-        window.copiarCodigosBipados = function() {
-            if (errosRegistrados.length === 0) {
-                alert("Nenhum código registrado para copiar.");
-                return;
+        window.renderizarBipsRecentes = function() {
+            const tbody = document.querySelector('#tabela-recente tbody');
+            tbody.innerHTML = errosRegistrados.map(e => 
+                `<tr>
+                    <td>${e.hora}</td>
+                    <td style="font-family: monospace; font-weight: 600;">${e.code}</td>
+                    <td>
+                        <button class="btn-delete-item" onclick="deletarBipIndividual('${e.id_nuvem}')" title="Excluir este código">🗑️</button>
+                    </td>
+                </tr>`
+            ).join('');
+        }
+
+        window.deletarBipIndividual = async function(idNuvem) {
+            if(confirm("Deseja realmente remover este código bipado do sistema?")) {
+                try {
+                    await deleteDoc(doc(db, "erros_bipados", idNuvem));
+                } catch (err) {
+                    alert("Erro ao remover o item do Cloud.");
+                    console.error(err);
+                }
             }
-            const listaCodigos = errosRegistrados.map(e => e.code).join('\n');
-            navigator.clipboard.writeText(listaCodigos).then(() => {
-                alert("Todos os códigos BR foram copiados com sucesso!");
-            }).catch(err => {
-                console.error("Erro ao copiar", err);
-            });
+        }
+
+        window.resetarPaginaBips = async function() {
+            if (confirm("🚨 ATENÇÃO:\nEsta ação apagará permanentemente todos os bips registrados nesta página da Nuvem. Deseja prosseguir?")) {
+                try {
+                    document.getElementById('cloud-status').innerHTML = "🔄 Resetando bips...";
+                    const q = await getDocs(colErros);
+                    const promessas = [];
+                    q.forEach((documento) => {
+                        promessas.push(deleteDoc(documento.ref));
+                    });
+                    await Promise.all(promessas);
+                    alert("Página de bips resetada com sucesso!");
+                } catch (err) {
+                    alert("Erro ao formatar os bips da nuvem.");
+                    console.error(err);
+                }
+            }
         }
 
         window.renderizarPerformance = function() {
-            const tbodyEsq = document.querySelector('#tabela-perf-esquerda tbody');
-            const tbodyDir = document.querySelector('#tabela-perf-direita tbody');
-            if(!tbodyEsq || !tbodyDir) return;
+            const tbody = document.querySelector('#tabela-perf tbody');
+            const tfoot = document.querySelector('#tabela-perf tfoot');
             
-            let tVal = 0, tErr = 0;
-            
-            const dados = Object.entries(resumoOperadores).sort((a, b) => b[1].total - a[1].total);
-            dados.forEach(([_, d]) => { tVal += d.total; tErr += d.erros; });
+            let totalGeralValidado = 0;
+            let totalGeralErros = 0;
 
-            const metadeIndex = Math.ceil(dados.length / 2);
-            const metadeEsquerda = dados.slice(0, metadeIndex);
-            const metadeDireita = dados.slice(metadeIndex);
+            tbody.innerHTML = Object.entries(resumoOperadores)
+                .sort((a, b) => b[1].total - a[1].total)
+                .map(([nome, d]) => {
+                    totalGeralValidado += d.total;
+                    totalGeralErros += d.erros;
 
-            const mapearLinhas = (lista, offsetOriginal) => {
-                return lista.map(([nome, d], index) => {
-                    const indiceCor = offsetOriginal + index;
-                    const ac = d.total > 0 ? (((d.total - d.erros) / d.total) * 100).toFixed(1) : "0.0";
-                    let color = ac >= 95 ? "#2ed573" : (ac >= 90 ? "#ffa502" : "#d63031");
+                    const acuracidade = d.total > 0 ? (((d.total - d.erros) / d.total) * 100).toFixed(1) : "0.0";
+                    let classeBadge = "badge-success";
+                    if (acuracidade < 95) classeBadge = "badge-warning";
+                    if (acuracidade < 90) classeBadge = "badge-error";
+
                     return `<tr>
-                        <td class="col-left" style="font-weight:600;"><span class="bullet-dot" style="background:${listaCoresBolinhas[indiceCor%8]}"></span>${nome}</td>
-                        <td style="color:#475569; font-weight:600;">${d.total}</td>
-                        <td class="${d.erros > 0 ? 'badge-error' : 'badge-zero-error'}">${d.erros}</td>
-                        <td>
-                            <div class="progress-container">
-                                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${ac}%; background:${color}"></div></div>
-                                <div class="progress-text">${ac}%</div>
-                            </div>
-                        </td>
+                        <td style="text-align: left; padding-left: 20px; font-weight: 600;">${nome}</td>
+                        <td>${d.total}</td>
+                        <td class="${d.erros > 0 ? 'badge-error' : ''}">${d.erros}</td>
+                        <td class="${classeBadge}">${acuracidade}%</td>
                     </tr>`;
                 }).join('');
-            };
 
-            tbodyEsq.innerHTML = mapearLinhas(metadeEsquerda, 0);
-            tbodyDir.innerHTML = mapearLinhas(metadeDireita, metadeIndex);
+            const acuracidadeGeral = totalGeralValidado > 0 ? (((totalGeralValidado - totalGeralErros) / totalGeralValidado) * 100).toFixed(1) : "0.0";
+            
+            tfoot.innerHTML = `
+                <tr class="total-row">
+                    <td style="text-align: left; padding-left: 20px;">TOTAL GERAL</td>
+                    <td>${totalGeralValidado}</td>
+                    <td>${totalGeralErros}</td>
+                    <td>${acuracidadeGeral}%</td>
+                </tr>`;
+        }
 
-            document.getElementById('kpi-total-validado').innerText = tVal.toLocaleString();
-            document.getElementById('kpi-total-erros').innerText = tErr.toLocaleString();
-            document.getElementById('kpi-acuracidade-geral').innerText = tVal > 0 ? (((tVal - tErr) / tVal) * 100).toFixed(1) + "%" : "100%";
+        window.copiarPerformanceGeral = function() {
+            if (Object.keys(resumoOperadores).length === 0) {
+                alert("Nenhum dado de performance carregado em memória.");
+                return;
+            }
 
-            document.getElementById('card-master-validado').innerText = tVal.toLocaleString();
-            document.getElementById('card-master-erros').innerText = tErr.toLocaleString();
-            document.getElementById('card-master-acuracidade').innerText = tVal > 0 ? (((tVal - tErr) / tVal) * 100).toFixed(1) + "%" : "100%";
+            let texto = `📊 *MATRIZ DE PERFORMANCE ACUMULADA - SPX*\n\n`;
+            texto += `*Operador | Validados | Erros | Acuracidade*\n`;
+            texto += `--------------------------------------------------\n`;
+
+            let totalValidado = 0;
+            let totalErros = 0;
+
+            Object.entries(resumoOperadores)
+                .sort((a, b) => b[1].total - a[1].total)
+                .forEach(([nome, d]) => {
+                    totalValidado += d.total;
+                    totalErros += d.erros;
+                    const acuracidade = d.total > 0 ? (((d.total - d.erros) / d.total) * 100).toFixed(1) : "0.0";
+                    texto += `• ${nome} | Val: ${d.total} | Err: ${d.erros} | *${acuracidade}%*\n`;
+                });
+
+            const acuracidadeGeral = totalValidado > 0 ? (((totalValidado - totalErros) / totalValidado) * 100).toFixed(1) : "0.0";
+            texto += `--------------------------------------------------\n`;
+            texto += `🏆 *TOTAL GERAL DA OPERAÇÃO:*\n`;
+            texto += `• Pacotes Validados: ${totalValidado}\n`;
+            texto += `• Total de Erros: ${totalErros}\n`;
+            texto += `• Acuracidade Média Geral: *${acuracidadeGeral}%*`;
+
+            navigator.clipboard.writeText(texto).then(() => {
+                alert("Tabela de Performance copiada com sucesso!");
+            }).catch(err => {
+                console.error("Erro ao copiar performance: ", err);
+            });
+        }
+
+        window.exportarPerformanceCSV = function() {
+            if (Object.keys(resumoOperadores).length === 0) {
+                alert("Nenhum dado disponível para exportação.");
+                return;
+            }
+
+            let csvContent = "\uFEFF"; 
+            csvContent += "Operador;Total Validado;Total Erros;Acuracidade %\n";
+
+            let totalValidado = 0;
+            let totalErros = 0;
+
+            Object.entries(resumoOperadores)
+                .sort((a, b) => b[1].total - a[1].total)
+                .forEach(([nome, d]) => {
+                    totalValidado += d.total;
+                    totalErros += d.erros;
+                    const acuracidade = d.total > 0 ? (((d.total - d.erros) / d.total) * 100).toFixed(1) : "0.0";
+                    csvContent += `${nome};${d.total};${d.erros};${acuracidade}%\n`;
+                });
+
+            const acuracidadeGeral = totalValidado > 0 ? (((totalValidado - totalErros) / totalValidado) * 100).toFixed(1) : "0.0";
+            csvContent += `TOTAL GERAL;${totalValidado};${totalErros};${acuracidadeGeral}%\n`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `performance_geral_spx.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         window.renderizarHistoricoDiario = function() {
             const container = document.getElementById('container-historico');
             container.innerHTML = "";
-            const hist = {};
-            const conjuntoOperadoresComErro = new Set();
 
+            const histPorData = {};
             errosRegistrados.forEach(e => {
-                if (!hist[e.data]) hist[e.data] = {};
-                hist[e.data][e.op] = (hist[e.data][e.op] || 0) + 1;
-                conjuntoOperadoresComErro.add(e.op);
+                let nomeOp = obterNomeOperador(e.op);
+                if (!histPorData[e.data]) histPorData[e.data] = {};
+                histPorData[e.data][nomeOp] = (histPorData[e.data][nomeOp] || 0) + 1;
             });
 
-            const datas = Object.keys(hist).sort((a,b) => b.split('/').reverse().join('') - a.split('/').reverse().join(''));
-            
-            document.getElementById('kpi-hist-erros').innerText = errosRegistrados.length;
-            document.getElementById('kpi-hist-operadores-erro').innerText = conjuntoOperadoresComErro.size;
+            const datasOrdenadas = Object.keys(histPorData).sort((a, b) => {
+                const [diaA, mesA, anoA] = a.split('/').map(Number);
+                const [diaB, mesB, anoB] = b.split('/').map(Number);
+                return new Date(anoB, mesB, diaB) - new Date(anoA, mesA, diaA);
+            });
 
-            datas.forEach(data => {
-                const ops = hist[data];
-                const totalDia = Object.values(ops).reduce((a,b) => a+b, 0);
+            window.dadosHistoricoGlobais = histPorData;
+
+            datasOrdenadas.forEach(data => {
+                const ops = histPorData[data];
+                const totalDoDia = Object.values(ops).reduce((acc, curr) => acc + curr, 0);
+
                 container.innerHTML += `
-                    <div class="report-container" style="margin-bottom:20px;">
-                        <div class="date-header-bar"><span>📅 DATA DO LOG: ${data}</span><span>Total de Erros no Dia: ${totalDia}</span></div>
-                        <div class="table-wrapper">
-                            <table class="hist-table">
-                                <thead><tr><th class="col-left">Operador</th><th>Quantidade de Erros</th><th style="text-align: right; padding-right: 25px;">Participação no Erro (% do Dia)</th></tr></thead>
-                                <tbody>
-                                    ${Object.entries(ops).sort((a,b)=>b[1]-a[1]).map(([nome, qtd], i) => {
-                                        const perc = ((qtd / totalDia) * 100).toFixed(1);
-                                        const color = obterCorEscalaCalor(perc);
-                                        return `<tr>
-                                            <td class="col-left" style="font-weight:600;"><span class="bullet-dot" style="background:${listaCoresBolinhas[i%8]}"></span>${nome}</td>
-                                            <td class="badge-error">${qtd}</td>
-                                            <td><div class="progress-container"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${perc}%; background:${color}"></div></div><div class="progress-text">${perc}%</div></div></td>
-                                        </tr>`;
-                                    }).join('')}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="card" style="padding:0; overflow:hidden; margin-bottom: 20px;">
+                        <table class="hist-table">
+                            <thead>
+                                <tr>
+                                    <th colspan="2" class="date-header">
+                                        📅 DATA: ${data} 
+                                        <span style="float: right; font-size: 11px; background: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 4px; display: flex; align-items: center; gap: 5px;">
+                                            Total de Erros: ${totalDoDia}
+                                            <button class="btn-utility" onclick="copiarHistoricoDia('${data}')">📋 Copiar</button>
+                                            <button class="btn-utility" onclick="exportarHistoricoDiaCSV('${data}')">📥 Exportar CSV</button>
+                                        </span>
+                                    </th>
+                                </tr>
+                                <tr style="background: #34495e;"><th style="text-align: left; padding-left: 20px;">Operador</th><th style="width: 25%;">Qtd Erros</th></tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(ops).sort((a,b) => b[1] - a[1]).map(([nome, qtd]) => `
+                                    <tr><td style="text-align: left; padding-left: 20px; font-weight: 600;">${nome}</td><td class="badge-error">${qtd}</td></tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
                     </div>`;
             });
+
+            if (datasOrdenadas.length === 0) {
+                container.innerHTML = "<p style='text-align:center; color:#7f8c8d; margin-top:20px;'>Nenhum log de erro localizado na nuvem.</p>";
+            }
         }
 
-        window.renderizarBipsRecentes = function() {
-            document.querySelector('#tabela-recente tbody').innerHTML = errosRegistrados.slice(0, 50).map(e => `<tr><td>${e.hora}</td><td style="font-family:monospace; font-weight:600;">${e.code}</td><td><button class="btn-utility" style="color:#e74c3c; border:none; padding:4px 8px;" onclick="deletarBipIndividual('${e.id_nuvem}')">🗑️</button></td></tr>`).join('');
+        window.copiarHistoricoDia = function(data) {
+            const ops = window.dadosHistoricoGlobais[data];
+            if(!ops) return;
+            
+            let texto = `📊 *RELATÓRIO DE ERROS - SPX (${data})*\n\n`;
+            Object.entries(ops).sort((a,b) => b[1] - a[1]).forEach(([nome, qtd]) => {
+                texto += `• ${nome}: ${qtd} erro(s)\n`;
+            });
+            
+            const total = Object.values(ops).reduce((acc, curr) => acc + curr, 0);
+            texto += `\n*Total Geral do Dia:* ${total} erros.`;
+
+            navigator.clipboard.writeText(texto).then(() => {
+                alert(`Resumo de ${data} copiado para a Área de Transferência!`);
+            }).catch(err => {
+                console.error("Erro ao copiar: ", err);
+            });
         }
 
-        window.deletarBipIndividual = async (id) => { if(confirm("Remover?")) await deleteDoc(doc(db, "erros_bipados", id)); };
+        window.exportarHistoricoDiaCSV = function(data) {
+            const ops = window.dadosHistoricoGlobais[data];
+            if(!ops) return;
 
-        window.resetarPaginaBips = async () => { if(confirm("Limpar bips da nuvem?")) { (await getDocs(colErros)).forEach(async d => await deleteDoc(d.ref)); } };
+            let csvContent = "\uFEFF"; 
+            csvContent += "Operador;Quantidade de Erros;Data\n";
 
-        window.lerArquivo = (event) => {
+            Object.entries(ops).sort((a,b) => b[1] - a[1]).forEach(([nome, qtd]) => {
+                csvContent += `${nome};${qtd};${data}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `erros_spx_${data.replace(/\//g, '-')}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // NOVO PROCESSADOR OTIMIZADO PARA ARQUIVOS GRANDES (+20k linhas)
+        window.lerArquivo = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('status-msg').innerHTML = `<span style="color: #e67e22;">⏳ Processando arquivo grande... Aguarde.</span>`;
+
             const reader = new FileReader();
-            document.getElementById('status-msg').innerHTML = "⏳ Processando base e atualizando registros antigos...";
-            reader.onload = async (e) => {
-                const lines = e.target.result.split(/\r?\n/);
-                const div = lines[0].includes(';') ? ';' : ',';
-                const cab = lines[0].split(div);
-                const colT = cab.findIndex(c => c.trim().includes('SPX Tracking Number')), colO = cab.findIndex(c => c.trim().toLowerCase().includes('operator'));
+            reader.onload = function(e) {
+                const conteudo = e.target.result;
                 
-                const temporariaBase = [];
-                const temporarioResumo = {};
-                const mapaLocalParaLinkagem = new Map();
+                // Descobre o divisor dinamicamente olhando a primeira linha
+                const primeiraQuebra = conteudo.indexOf('\n');
+                if (primeiraQuebra === -1) return;
+                const primeiraLinha = conteudo.substring(0, primeiraQuebra);
+                const divisor = primeiraLinha.includes(';') ? ';' : ',';
                 
-                for (let i = 1; i < lines.length; i++) {
-                    const col = lines[i].split(div);
-                    if (col[colT]) {
-                        const track = col[colT].trim(), op = col[colO] ? col[colO].replace(/\[.*?\]/, '').trim() : "Desconhecido";
-                        temporariaBase.push([track, op]);
-                        mapaLocalParaLinkagem.set(track, op);
-                        if (!temporarioResumo[op]) temporarioResumo[op] = { total: 0, erros: 0 };
-                        temporarioResumo[op].total++;
-                    }
-                }
-                
-                try {
-                    await setDoc(doc(db, "configuracao_sistema", "base_operacional"), {
-                        base: JSON.stringify(temporariaBase),
-                        resumo: JSON.stringify(temporarioResumo)
-                    });
+                const cabecalho = primeiraLinha.split(divisor).map(c => c.trim());
+                const colTrack = cabecalho.findIndex(c => c.includes('SPX Tracking Number'));
+                const colOp = cabecalho.findIndex(c => c.toLowerCase().includes('operator'));
 
-                    document.getElementById('status-msg').innerHTML = "⚙️ Re-vinculando bips antigos aos novos operadores...";
-                    const snapshotBips = await getDocs(colErros);
+                if (colTrack === -1) {
+                    document.getElementById('status-msg').innerHTML = `<span style="color: #d63031;">❌ Coluna 'SPX Tracking Number' não localizada no CSV.</span>`;
+                    return;
+                }
+
+                baseDeDados.clear();
+                resumoOperadores = {};
+                
+                // Mapeamento para reduzir drasticamente o uso de localStorage (Dicionário de Operadores)
+                let mapaOperadoresUnicos = {};
+                let listaOps = [];
+
+                let posicaoAtual = primeiraQuebra + 1;
+                let finalDoConteudo = conteudo.length;
+
+                // Loop otimizado caractere por caractere (Evita dar Split em arquivos gigantes)
+                while (posicaoAtual < finalDoConteudo) {
+                    let proximaQuebra = conteudo.indexOf('\n', posicaoAtual);
+                    if (proximaQuebra === -1) proximaQuebra = finalDoConteudo;
                     
-                    for (const documentoBip of snapshotBips.docs) {
-                        const dadosDoBip = documentoBip.data();
-                        if (mapaLocalParaLinkagem.has(dadosDoBip.code)) {
-                            const novoNomeOperador = mapaLocalParaLinkagem.get(dadosDoBip.code);
-                            if (dadosDoBip.op !== novoNomeOperador) {
-                                await updateDoc(doc(db, "erros_bipados", documentoBip.id), {
-                                    op: novoNomeOperador
-                                });
-                            }
+                    let linha = conteudo.substring(posicaoAtual, proximaQuebra).trim();
+                    posicaoAtual = proximaQuebra + 1;
+
+                    if (!linha) continue;
+
+                    let col = linha.split(divisor);
+                    if (col[colTrack]) {
+                        let track = col[colTrack].trim();
+                        let opOriginal = col[colOp] ? col[colOp].replace(/\[.*?\]/, '').trim() : "Desconhecido";
+
+                        // Se o operador ainda não está no mapa, adiciona
+                        if (mapaOperadoresUnicos[opOriginal] === undefined) {
+                            mapaOperadoresUnicos[opOriginal] = listaOps.length;
+                            listaOps.push(opOriginal);
                         }
+
+                        let idOp = mapaOperadoresUnicos[opOriginal];
+                        baseDeDados.set(track, idOp); // Guarda apenas a referência numérica
+
+                        if (!resumoOperadores[opOriginal]) {
+                            resumoOperadores[opOriginal] = { total: 0, erros: 0 };
+                        }
+                        resumoOperadores[opOriginal].total++;
                     }
-
-                    document.getElementById('status-msg').innerHTML = "✅ Base e histórico antigo re-sincronizados globalmente!";
-                } catch (erroEnvio) {
-                    console.error(erroEnvio);
-                    document.getElementById('status-msg').innerHTML = "❌ Erro ao processar re-vinculação na nuvem.";
                 }
+
+                // Salva tudo comprimido
+                listaOperadoresInvertida = listaOps;
+                localStorage.setItem('spx_op_list', JSON.stringify(listaOps));
+                localStorage.setItem('spx_base', JSON.stringify(Array.from(baseDeDados.entries())));
+                localStorage.setItem('spx_resumo', JSON.stringify(resumoOperadores));
+                
+                document.getElementById('status-msg').innerHTML = `<span style="color: #27ae60;">✔ Base atualizada! Mapeados ${baseDeDados.size} pacotes ativos.</span>`;
+                
+                processarContagemErros();
+                if (paginaAtiva === 'audit') renderizarPerformance();
+                if (paginaAtiva === 'diario') renderizarHistoricoDiario();
             };
-            reader.readAsText(event.target.files[0], "UTF-8");
-        };
+            reader.readAsText(file, "UTF-8");
+        }
 
-        window.resetarBaseLocal = async () => { 
-            if(confirm("Deseja apagar a Base Operacional da Nuvem? Isso afetará todas as telas conectadas.")) { 
-                await deleteDoc(doc(db, "configuracao_sistema", "base_operacional"));
-            } 
-        };
+        window.resetarBaseLocal = function() {
+            if(confirm("Deseja mesmo limpar a planilha de operadores guardada neste computador?\n\nIsso não apagará os erros armazenados na nuvem.")) {
+                baseDeDados.clear();
+                resumoOperadores = {};
+                listaOperadoresInvertida = [];
+                localStorage.removeItem('spx_base');
+                localStorage.removeItem('spx_resumo');
+                localStorage.removeItem('spx_op_list');
+                document.getElementById('csv-file').value = "";
+                document.getElementById('status-msg').innerHTML = "<span style='color: #7f8c8d;'>Planilha local removida.</span>";
+                processarContagemErros();
+                if (paginaAtiva === 'audit') renderizarPerformance();
+                if (paginaAtiva === 'diario') renderizarHistoricoDiario();
+            }
+        }
 
-        window.showPage = (id, btn) => {
-            if ((id === 'audit' || id === 'diario') && prompt("🔒 Senha:") !== SENHA_LIDERANCA) return;
+        window.showPage = function(id, btn) {
+            if (id === 'audit' || id === 'diario') {
+                const autenticado = prompt("🔒 Área restrita à liderança.\nDigite a senha de acesso:");
+                if (autenticado !== SENHA_LIDERANCA) {
+                    alert("Acesso negado. Senha incorreta.");
+                    return; 
+                }
+            }
+
             paginaAtiva = id;
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active'); btn.classList.add('active');
-            if (id === 'bipar') { renderizarBipsRecentes(); setTimeout(() => document.getElementById('scanner').focus(), 80); }
+            
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+            
+            if (id === 'bipar') {
+                renderizarBipsRecentes();
+                setTimeout(() => document.getElementById('scanner').focus(), 80);
+            }
             if (id === 'audit') renderizarPerformance();
             if (id === 'diario') renderizarHistoricoDiario();
-        };
+        }
 
-        window.limparTudo = async () => { 
-            if(prompt("Senha Master:") === SENHA_LIDERANCA) { 
-                const bips = await getDocs(colErros);
-                bips.forEach(async d => await deleteDoc(d.ref)); 
-                await deleteDoc(doc(db, "configuracao_sistema", "base_operacional"));
-                location.reload(); 
-            } 
-        };
+        window.limparTudo = async function() {
+            const autenticado = prompt("🔒 Confirme a senha Master para executar a formatação do banco:");
+            if (autenticado !== SENHA_LIDERANCA) {
+                alert("Ação cancelada. Senha incorreta.");
+                return;
+            }
+
+            if (confirm("🚨 CONFIRMAÇÃO FINAL:\nEsta ação limpará o banco remotos de todos os PCs conectados. Prosseguir?")) {
+                document.getElementById('cloud-status').innerHTML = "🔄 Executando limpeza geral...";
+                try {
+                    const q = await getDocs(colErros);
+                    const deletarPromessas = [];
+                    q.forEach((documento) => {
+                        deletarPromessas.push(deleteDoc(documento.ref));
+                    });
+                    await Promise.all(deletarPromessas);
+                    
+                    localStorage.clear();
+                    alert("Sucesso! Banco Cloud resetado.");
+                    location.reload();
+                } catch (err) {
+                    alert("Erro ao limpar dados remotos.");
+                    console.error(err);
+                }
+            }
+        }
     </script>
 </body>
 </html>
